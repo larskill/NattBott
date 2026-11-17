@@ -432,6 +432,38 @@ def kmd_epost(args, cfg):
     print("Morgenrapport sendt til", msg["To"])
 
 
+def kmd_gjenskap(args, cfg):
+    """Lager morgenrapporten på nytt for demoer laget en gitt dato (f.eks. hvis e-posten feilet)."""
+    idag = dt.date.today()
+    sett = les_json(os.path.join(DATA, "sett.json"), {})
+    leads = []
+    for onr, info in sett.items():
+        if info.get("status") != "demo" or info.get("dato") != args.dato:
+            continue
+        e = api_get_enhet(onr)
+        b = next((b for b in cfg["bransjer"] if matcher_bransje(e, b)), cfg["bransjer"][0])
+        v = vurder(e, b, idag) or (0, [], [])
+        kand = til_kandidat(e, b, *v)
+        kand["slug"] = info["slug"]
+        kand["demo_url"] = f"{cfg['demo_base_url'].rstrip('/')}/{info['slug']}/"
+        kand["utkast"] = maler.utkast(kand, cfg)
+        leads.append(kand)
+    leads.sort(key=lambda k: -k["poeng"])
+    os.makedirs(RAPPORT_DIR, exist_ok=True)
+    html_ = maler.morgenrapport(leads, {}, [f"Gjenskapt rapport for {args.dato}"], cfg, args.dato)
+    for navn in (f"rapport-{args.dato}.html", "siste.html"):
+        with open(os.path.join(RAPPORT_DIR, navn), "w", encoding="utf-8") as f:
+            f.write(html_)
+    skriv_json(os.path.join(DATA, f"leads-{idag.isoformat()}.json"), leads)
+    print(f"Rapport gjenskapt for {args.dato}: {len(leads)} bedrifter")
+
+
+def api_get_enhet(orgnr):
+    req = urllib.request.Request(f"{API}/{orgnr}", headers={"Accept": "application/json", "User-Agent": "nattmaskin/1.0"})
+    with urllib.request.urlopen(req, timeout=30, context=ssl_kontekst()) as r:
+        return json.load(r)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="kmd", required=True)
@@ -442,6 +474,8 @@ def main():
     b.add_argument("--utelat-fil", help="JSON {orgnr: grunn} fra nettsjekken")
     sub.add_parser("nettsjekk")
     sub.add_parser("epost")
+    g = sub.add_parser("gjenskap")
+    g.add_argument("dato", help="YYYY-MM-DD")
     sl = sub.add_parser("slett")
     sl.add_argument("orgnr", help="kommaseparerte orgnr som har takket nei")
     args = p.parse_args()
@@ -449,7 +483,7 @@ def main():
     if cfg is None:
         sys.exit("Fant ikke config.json")
     {"hent": kmd_hent, "bygg": kmd_bygg, "slett": kmd_slett,
-     "nettsjekk": kmd_nettsjekk, "epost": kmd_epost}[args.kmd](args, cfg)
+     "nettsjekk": kmd_nettsjekk, "epost": kmd_epost, "gjenskap": kmd_gjenskap}[args.kmd](args, cfg)
 
 
 if __name__ == "__main__":

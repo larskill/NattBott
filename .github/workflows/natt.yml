@@ -21,10 +21,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
         with:
-          python-version: "3.12"
+          ref: main   # alltid nyeste versjon, også ved «Re-run»
 
       - name: Hent bedrifter fra Brønnøysund
         run: python3 nattmaskin.py hent
@@ -41,7 +40,8 @@ jobs:
           git config user.email "nattmaskin@users.noreply.github.com"
           git add docs data/sett.json
           git diff --cached --quiet || git commit -m "Natt $(date +%F)"
-          git push
+          git pull --rebase origin main
+          git push origin HEAD:main
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

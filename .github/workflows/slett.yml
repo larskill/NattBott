@@ -22,7 +22,9 @@ jobs:
     environment:
       name: github-pages
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          ref: main
       - name: Slett demo og merk «nei»
         run: python3 nattmaskin.py slett "${{ inputs.orgnr }}"
       - name: Lagre
@@ -31,7 +33,8 @@ jobs:
           git config user.email "nattmaskin@users.noreply.github.com"
           git add -A docs data/sett.json
           git diff --cached --quiet || git commit -m "Slettet ${{ inputs.orgnr }}"
-          git push
+          git pull --rebase origin main
+          git push origin HEAD:main
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
