@@ -13,8 +13,7 @@ Demo-sidene er merket tydelig som forslag. De har `noindex`, og `robots.txt` ste
 1. **Pages:** Settings → Pages → *Build and deployment* → Source: **GitHub Actions**.
 2. **Gmail-apppassord:** Slå på totrinnsbekreftelse i Google-kontoen. Gå deretter til myaccount.google.com/apppasswords og lag et passord med navnet «NattBott».
 3. **Secrets:** Settings → Secrets and variables → Actions → *New repository secret*:
-   - `GMAIL_USER` = killingberglars@gmail.com
-   - `GMAIL_APP_PASSWORD` = apppassordet på 16 tegn. Del det aldri med noen.
+   - `NATTBOTT` = apppassordet på 16 tegn. Del det aldri med noen. Avsender er e-posten i config.json.
 4. **Første kjøring:** Actions → *Nattmaskin* → **Run workflow**. Etter det går den av seg selv hver natt ca. kl. 03:17.
 
 ## Daglig bruk

@@ -410,9 +410,10 @@ def kmd_nettsjekk(args, cfg):
 def kmd_epost(args, cfg):
     import smtplib
     from email.message import EmailMessage
-    bruker, passord = os.environ.get("GMAIL_USER"), os.environ.get("GMAIL_APP_PASSWORD")
-    if not bruker or not passord:
-        sys.exit("Mangler GMAIL_USER / GMAIL_APP_PASSWORD – rapporten ble ikke sendt.")
+    bruker = os.environ.get("GMAIL_USER") or cfg["selger"]["epost"]
+    passord = (os.environ.get("GMAIL_APP_PASSWORD") or "").replace(" ", "").strip()
+    if not passord:
+        sys.exit("Mangler apppassord (secret NATTBOTT) – rapporten ble ikke sendt.")
     idag = dt.date.today().isoformat()
     leads = les_json(os.path.join(DATA, f"leads-{idag}.json"), [])
     with open(os.path.join(RAPPORT_DIR, "siste.html"), encoding="utf-8") as f:
