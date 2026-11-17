@@ -11,6 +11,7 @@ Kun standardbiblioteket; ingen pip-pakker trengs.
 """
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
 import re
@@ -22,6 +23,7 @@ import urllib.parse
 import urllib.request
 
 import maler
+import salong
 
 ROT = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(ROT, "data")
@@ -238,6 +240,50 @@ def til_kandidat(e, b, poeng, grunner, flagg):
     }
 
 
+# ---------- bilder fra Pexels (gratis lisens) ----------
+
+_BILDE_CACHE = {}
+
+
+def pexels_sok(sporring):
+    nokkel = os.environ.get("PEXELS_KEY", "").strip()
+    if not nokkel:
+        return []
+    if sporring in _BILDE_CACHE:
+        return _BILDE_CACHE[sporring]
+    url = "https://api.pexels.com/v1/search?" + urllib.parse.urlencode(
+        {"query": sporring, "per_page": 40, "orientation": "portrait"})
+    req = urllib.request.Request(url, headers={"Authorization": nokkel, "User-Agent": "nattmaskin/1.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=30, context=ssl_kontekst()) as r:
+            fotos = json.load(r).get("photos", [])
+    except Exception as e:  # noqa: BLE001
+        print(f"::warning::Pexels-søk feilet ({sporring}): {e}")
+        fotos = []
+    _BILDE_CACHE[sporring] = [{"src": f["src"].get("large2x") or f["src"]["large"], "alt": f.get("alt") or "",
+                                "fotograf": f.get("photographer", ""), "url": f.get("url", "")} for f in fotos]
+    return _BILDE_CACHE[sporring]
+
+
+def velg_bilder(kand, antall=5):
+    """Fem ulike bilder per demo, valgt ut fra orgnr så samme bedrift alltid får de samme."""
+    inn = salong.INNHOLD.get(kand["mal"])
+    if not inn:
+        return []
+    h = int(hashlib.sha1(kand["orgnr"].encode()).hexdigest(), 16)
+    valgt = []
+    for i in range(antall):
+        pool = pexels_sok(inn["sok"][(h + i) % len(inn["sok"])])
+        if not pool:
+            continue
+        for j in range(len(pool)):
+            kandidat = pool[(h // 7 + i * 11 + j) % len(pool)]
+            if kandidat not in valgt:
+                valgt.append(kandidat)
+                break
+    return valgt
+
+
 # ---------- kommandoer ----------
 
 def kmd_hent(args, cfg):
@@ -305,6 +351,7 @@ def kmd_bygg(args, cfg):
         brukte.add(slug)
         kand["slug"] = slug
         kand["demo_url"] = f"{cfg['demo_base_url'].rstrip('/')}/{slug}/"
+        kand["bilder"] = velg_bilder(kand)
         mappe = os.path.join(DEMO_DIR, slug)
         os.makedirs(mappe, exist_ok=True)
         with open(os.path.join(mappe, "index.html"), "w", encoding="utf-8") as f:
@@ -470,6 +517,12 @@ def kmd_gjenskap(args, cfg):
         kand = til_kandidat(e, b, *v)
         kand["slug"] = info["slug"]
         kand["demo_url"] = f"{cfg['demo_base_url'].rstrip('/')}/{info['slug']}/"
+        if args.bygg_demoer:
+            kand["bilder"] = velg_bilder(kand)
+            mappe = os.path.join(DEMO_DIR, info["slug"])
+            os.makedirs(mappe, exist_ok=True)
+            with open(os.path.join(mappe, "index.html"), "w", encoding="utf-8") as f:
+                f.write(maler.demo_side(kand, cfg))
         kand["utkast"] = maler.utkast(kand, cfg)
         leads.append(kand)
     leads.sort(key=lambda k: -k["poeng"])
@@ -533,6 +586,7 @@ def main():
     pr.add_argument("dato", nargs="?", default="")
     g = sub.add_parser("gjenskap")
     g.add_argument("dato", nargs="?", default="", help="YYYY-MM-DD (tom = i dag)")
+    g.add_argument("--bygg-demoer", action="store_true", help="lag demo-sidene på nytt med nyeste maler")
     sl = sub.add_parser("slett")
     sl.add_argument("orgnr", help="kommaseparerte orgnr som har takket nei")
     args = p.parse_args()

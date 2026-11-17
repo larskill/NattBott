@@ -70,6 +70,21 @@
       "ekskluder_regex": "nail|negl|lash|vipp|brow|bryn|tattoo|tatovering"
     },
     {
+      "id": "skjonnhet",
+      "navn": "Hud- og skjønnhetspleie",
+      "mal": "skjonnhet",
+      "sok": [
+        {
+          "naeringskode": "96.22"
+        }
+      ],
+      "kode_prefiks": [
+        "96.22",
+        "96.02"
+      ],
+      "krev_navn_regex": "hud|skjønn|skjonn|beauty|spa|negl|nail|vipp|lash|bryn|brow|klinikk|clinic|estet|glow|velvære|studio|salong"
+    },
+    {
       "id": "rorlegger",
       "navn": "Rørlegger",
       "mal": "rorlegger",

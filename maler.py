@@ -2,6 +2,8 @@
 import html
 import urllib.parse
 
+import salong
+
 E = html.escape
 
 # ---------------- innhold per bransje ----------------
@@ -159,6 +161,8 @@ def initialer(navn):
 
 
 def demo_side(k, cfg):
+    if k["mal"] in salong.INNHOLD:
+        return salong.demo(k, cfg)
     inn = INNHOLD[k["mal"]]
     bg, blekk, aksent, aksent_tekst = inn["palett"]
     font_url, font_familie = FONTER[inn["font"]]
@@ -254,14 +258,17 @@ Interessert? <a href="tel:{E(selger['telefon'].replace(' ', ''))}">{E(selger['te
 
 def utkast(k, cfg):
     s, p = cfg["selger"], cfg["pris"]
+    salong_ = k["mal"] in salong.INNHOLD
+    bilde_linje = ("Bildene på siden er eksempelbilder – sier dere ja, bytter jeg dem ut med bilder fra "
+                   "deres egen Instagram, så siden blir helt deres. " if salong_ else "")
     if k.get("epost_lov"):
         emne = f"Forslag til nettside for {k['navn']}"
         tekst = (
             f"Hei!\n\n"
-            f"Jeg heter {s['navn']} og lager enkle nettsider for små bedrifter i Bergen. "
+            f"Jeg heter {s['navn']} og lager nettsider for små bedrifter i Bergen. "
             f"Jeg fant ingen nettside for {k['navn']}, så jeg tok meg friheten å lage et forslag:\n\n"
             f"{k['demo_url']}\n\n"
-            f"Siden kan tilpasses med deres egne bilder, åpningstider og tekster. "
+            f"{bilde_linje}Tekster, priser og åpningstider tilpasses dere. "
             f"Pris: {p['oppstart']} kr i oppstart og {p['per_mnd']} kr/mnd for drift, domene og små endringer. Ingen binding.\n\n"
             f"Passer det med en kort prat? Svar på denne e-posten eller ring meg på {s['telefon']}.\n\n"
             f"Vennlig hilsen\n{s['navn']}\n\n"
@@ -269,19 +276,35 @@ def utkast(k, cfg):
         )
         mailto = "mailto:{}?subject={}&body={}".format(
             k["epost"], urllib.parse.quote(emne), urllib.parse.quote(tekst))
-        return {"type": "epost", "emne": emne, "tekst": tekst, "lenke": mailto}
+        oppf_emne = f"Re: {emne}"
+        oppf_tekst = (
+            f"Hei igjen!\n\n"
+            f"Ville bare høre om dere fikk sett forslaget til nettside for {k['navn']}:\n{k['demo_url']}\n\n"
+            f"Jeg tilpasser gjerne farger, tekster og bilder før dere bestemmer dere – helt uforpliktende. "
+            f"Et kort ja eller nei holder.\n\nVennlig hilsen\n{s['navn']}\n{s['telefon']}"
+        )
+        oppf = "mailto:{}?subject={}&body={}".format(
+            k["epost"], urllib.parse.quote(oppf_emne), urllib.parse.quote(oppf_tekst))
+        return {"type": "epost", "emne": emne, "tekst": tekst, "lenke": mailto,
+                "oppf_tekst": oppf_tekst, "oppf_lenke": oppf}
     tekst = (
         f"«Hei, jeg heter {s['navn']}. Jeg lager nettsider for små bedrifter her i Bergen, "
         f"og så at {k['navn']} ikke har en egen side. Jeg har faktisk laget et forslag til dere allerede – "
         f"kan jeg sende deg lenken på SMS eller e-post, så kan du se på det når det passer?»\n\n"
         f"Hvis ja: be om samtykke og send {k.get('demo_url', '')}\n"
-        f"Pris hvis de spør: {p['oppstart']} kr oppstart + {p['per_mnd']} kr/mnd, ingen binding."
+        + (f"Nevn gjerne: bildene byttes ut med deres egne fra Instagram.\n" if salong_ else "")
+        + f"Pris hvis de spør: {p['oppstart']} kr oppstart + {p['per_mnd']} kr/mnd, ingen binding."
     )
     lenke = "tel:+47" + k["telefon"].replace(" ", "") if k.get("telefon") else ""
-    return {"type": "ring", "emne": "Ringemanus", "tekst": tekst, "lenke": lenke}
+    return {"type": "ring", "emne": "Ringemanus", "tekst": tekst, "lenke": lenke,
+            "oppf_tekst": "Ring igjen om noen dager hvis du ikke fikk svar.", "oppf_lenke": lenke}
 
 
 # ---------------- morgenrapport ----------------
+
+STATUSER = [("sendt", "Sendt"), ("ringt", "Ringt"), ("interessert", "Interessert"),
+            ("kunde", "Kunde"), ("nei", "Nei")]
+
 
 def morgenrapport(leads, utelat, logg, cfg, dato):
     kort = []
@@ -290,53 +313,120 @@ def morgenrapport(leads, utelat, logg, cfg, dato):
         sok = "https://www.google.com/search?q=" + urllib.parse.quote(f"{k['navn']} {k['poststed'] or 'Bergen'}")
         brreg = f"https://virksomhet.brreg.no/nb/oppslag/enheter/{k['orgnr']}"
         if u["type"] == "epost":
-            hoved = f'<a class="btn primar" href="{E(u["lenke"])}">Send e-post</a>'
+            hoved = f'<a class="btn primar" data-auto="sendt" href="{E(u["lenke"])}">Send e-post</a>'
         elif u["lenke"]:
-            hoved = f'<a class="btn primar" href="{E(u["lenke"])}">Ring {E(k["telefon"])}</a>'
+            hoved = f'<a class="btn primar" data-auto="ringt" href="{E(u["lenke"])}">Ring {E(k["telefon"])}</a>'
         else:
             hoved = '<span class="btn av">Finn kontaktinfo</span>'
+        oppf = (f'<div class="oppf"><b>Tid for oppfølging.</b> '
+                + (f'<a class="btn" data-auto="fulgtopp" href="{E(u["oppf_lenke"])}">Send oppfølging</a>' if u.get("oppf_lenke") else "")
+                + f'<details><summary>Se tekst</summary><pre>{E(u.get("oppf_tekst", ""))}</pre></details></div>')
         flagg = "".join(f'<li>{E(f)}</li>' for f in k["flagg"])
         grunner = "".join(f'<span class="chip">{E(g)}</span>' for g in k["grunner"])
-        kort.append(f"""<article class="lead">
+        statusknapper = "".join(f'<button type="button" data-s="{s}">{E(t)}</button>' for s, t in STATUSER)
+        kort.append(f"""<article class="lead" data-orgnr="{E(k['orgnr'])}" data-type="{u['type']}">
 <div class="topp"><div><h3>{E(k['navn'])} <small>{E(k['form'])}</small></h3>
 <p class="meta">{E(k['bransje_navn'])} · {E(k['poststed'])} · poeng {k['poeng']}</p></div>
 <span class="kanal {u['type']}">{'E-post' if u['type'] == 'epost' else 'Ring'}</span></div>
+<p class="statuslinje"></p>
 <div class="chips">{grunner}</div>
 {f'<ul class="flagg">{flagg}</ul>' if flagg else ''}
+{oppf}
 <div class="knapper">{hoved}<a class="btn" href="{E(k['demo_url'])}" target="_blank" rel="noopener">Se demo</a>
 <a class="btn" href="{E(sok)}" target="_blank" rel="noopener">Google-sjekk</a><a class="btn" href="{E(brreg)}" target="_blank" rel="noopener">Brreg</a></div>
+<div class="status">{statusknapper}</div>
+<p class="nei-hint">Husk å slette demoen: Actions → «Slett demo» → orgnr <b>{E(k['orgnr'])}</b></p>
 <details><summary>{E(u['emne'])}</summary><pre>{E(u['tekst'])}</pre></details>
+<textarea placeholder="Notat (lagres på denne enheten)"></textarea>
 </article>""")
-    n_epost = sum(1 for k in leads if k["utkast"]["type"] == "epost")
     utelat_html = "".join(f"<li>{E(onr)}: {E(grunn)}</li>" for onr, grunn in utelat.items())
     logg_html = "".join(f"<li>{E(l)}</li>" for l in logg)
     tom = '<p class="tom">Ingen nye demoer i natt.</p>' if not leads else ""
     return f"""<!doctype html><html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Morgenrapport {dato}</title><style>
-:root{{--bg:#FAF8F4;--kort:#fff;--blekk:#1C2321;--dempet:#5E6A66;--linje:#E4E0D8;--aksent:#1F6F5C;--varsel:#9A5B00;--varselbg:#FFF4E0}}
-@media(prefers-color-scheme:dark){{:root{{--bg:#151917;--kort:#1E2321;--blekk:#ECEFEC;--dempet:#9AA6A1;--linje:#2E3532;--aksent:#5CC2A6;--varsel:#F0B45C;--varselbg:#2E2614}}}}
+:root{{--bg:#FAF8F4;--kort:#fff;--blekk:#1C2321;--dempet:#5E6A66;--linje:#E4E0D8;--aksent:#1F6F5C;--varsel:#9A5B00;--varselbg:#FFF4E0;--blaa:#2F5DA8;--blaabg:#EAF0FA}}
+@media(prefers-color-scheme:dark){{:root{{--bg:#151917;--kort:#1E2321;--blekk:#ECEFEC;--dempet:#9AA6A1;--linje:#2E3532;--aksent:#5CC2A6;--varsel:#F0B45C;--varselbg:#2E2614;--blaa:#8FB3F0;--blaabg:#1C2638}}}}
 *{{box-sizing:border-box;margin:0}}body{{background:var(--bg);color:var(--blekk);font:16px/1.5 system-ui,-apple-system,'Segoe UI',sans-serif;padding:28px 18px}}
 .wrap{{max-width:860px;margin:0 auto}}h1{{font-size:28px;letter-spacing:-.01em}}
-.sum{{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0 26px}}.tall{{background:var(--kort);border:1px solid var(--linje);border-radius:12px;padding:12px 18px}}
-.tall b{{display:block;font-size:26px}}.tall span{{color:var(--dempet);font-size:14px}}
+.sum{{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 14px}}.tall{{background:var(--kort);border:1px solid var(--linje);border-radius:12px;padding:10px 16px;min-width:110px}}
+.tall b{{display:block;font-size:24px}}.tall span{{color:var(--dempet);font-size:13px}}
+.filter{{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px}}.filter button{{font:inherit;font-size:14px;padding:6px 12px;border-radius:999px;border:1px solid var(--linje);background:var(--kort);color:var(--blekk);cursor:pointer}}
+.filter button.på{{background:var(--blekk);color:var(--bg);border-color:var(--blekk)}}
 .lead{{background:var(--kort);border:1px solid var(--linje);border-radius:14px;padding:18px 20px;margin-bottom:14px}}
+.lead.ferdig{{opacity:.55}}
 .topp{{display:flex;justify-content:space-between;gap:12px}}h3{{font-size:19px}}h3 small{{color:var(--dempet);font-weight:500;font-size:13px}}
 .meta{{color:var(--dempet);font-size:14px}}.kanal{{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;height:fit-content;border:1px solid var(--linje)}}
-.kanal.epost{{color:var(--aksent)}}.chips{{margin:10px 0 4px}}.chip{{display:inline-block;font-size:12px;color:var(--dempet);border:1px solid var(--linje);border-radius:999px;padding:2px 9px;margin:0 6px 6px 0}}
+.kanal.epost{{color:var(--aksent)}}.statuslinje{{font-size:14px;font-weight:600;color:var(--blaa);margin-top:4px}}.statuslinje:empty{{display:none}}
+.chips{{margin:10px 0 4px}}.chip{{display:inline-block;font-size:12px;color:var(--dempet);border:1px solid var(--linje);border-radius:999px;padding:2px 9px;margin:0 6px 6px 0}}
 .flagg{{background:var(--varselbg);color:var(--varsel);border-radius:8px;padding:8px 12px 8px 28px;font-size:14px;margin:6px 0}}
-.knapper{{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 6px}}.btn{{font-size:14px;font-weight:600;padding:7px 14px;border-radius:8px;border:1px solid var(--linje);text-decoration:none;color:var(--blekk)}}
+.oppf{{display:none;background:var(--blaabg);color:var(--blaa);border-radius:8px;padding:10px 12px;font-size:14px;margin:8px 0}}
+.lead.folgopp .oppf{{display:block}}.oppf .btn{{margin-left:8px;color:var(--blaa);border-color:var(--blaa)}}
+.knapper{{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 8px}}.btn{{font-size:14px;font-weight:600;padding:7px 14px;border-radius:8px;border:1px solid var(--linje);text-decoration:none;color:var(--blekk);display:inline-block}}
 .btn.primar{{background:var(--aksent);border-color:var(--aksent);color:var(--bg)}}.btn.av{{color:var(--dempet)}}
+.status{{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 6px}}.status button{{font:inherit;font-size:13px;padding:4px 10px;border-radius:6px;border:1px dashed var(--linje);background:none;color:var(--dempet);cursor:pointer}}
+.status button.på{{border-style:solid;border-color:var(--blaa);color:var(--blaa);font-weight:600}}
+.nei-hint{{display:none;font-size:13px;color:var(--varsel);margin:4px 0}}.lead[data-status=nei] .nei-hint{{display:block}}
 details summary{{cursor:pointer;font-size:14px;color:var(--dempet);margin-top:4px}}pre{{white-space:pre-wrap;font:14px/1.5 ui-monospace,Menlo,monospace;background:var(--bg);border:1px solid var(--linje);border-radius:8px;padding:12px;margin-top:8px;user-select:all}}
+textarea{{width:100%;margin-top:8px;font-size:14px;font-family:inherit;line-height:1.4;padding:8px 10px;border:1px solid var(--linje);border-radius:8px;background:var(--bg);color:var(--blekk);min-height:38px;resize:vertical}}
 .tom{{color:var(--dempet)}}.fot{{margin-top:28px;color:var(--dempet);font-size:13px}}.fot ul{{padding-left:18px}}
+.info{{font-size:13px;color:var(--dempet);margin-bottom:16px}}
 </style></head><body><div class="wrap">
 <h1>Morgenrapport · {dato}</h1>
-<div class="sum"><div class="tall"><b>{len(leads)}</b><span>nye demoer</span></div><div class="tall"><b>{n_epost}</b><span>klare for e-post</span></div>
-<div class="tall"><b>{len(leads) - n_epost}</b><span>ring / stikk innom</span></div><div class="tall"><b>{len(utelat)}</b><span>utelatt (har nettside e.l.)</span></div></div>
-<p class="meta" style="margin-bottom:18px">E-post sendes bare til AS og andre selskaper. Enkeltpersonforetak er fysiske personer og må ha samtykke før e-post/SMS (markedsføringsloven § 15), så dem ringer du.</p>
+<div class="sum"><div class="tall"><b id="n-alle">{len(leads)}</b><span>demoer</span></div><div class="tall"><b id="n-ny">–</b><span>ikke kontaktet</span></div>
+<div class="tall"><b id="n-oppf">–</b><span>følg opp</span></div><div class="tall"><b id="n-int">–</b><span>interessert</span></div><div class="tall"><b id="n-kunde">–</b><span>kunder</span></div></div>
+<div class="filter"><button data-f="alle" class="på">Alle</button><button data-f="ny">Ikke kontaktet</button><button data-f="oppf">Følg opp</button>
+<button data-f="aktiv">Sendt/ringt</button><button data-f="int">Interessert</button><button data-f="ferdig">Kunde/nei</button></div>
+<p class="info">Status lagres i nettleseren på denne enheten. «Send e-post» og «Ring» merker automatisk. E-post uten svar etter 4 dager havner under «Følg opp».
+E-post går bare til AS og andre selskaper – enkeltpersonforetak ringer du (markedsføringsloven § 15).</p>
 {tom}{''.join(kort)}
-<div class="fot"><details><summary>Utelatt i natt ({len(utelat)})</summary><ul>{utelat_html}</ul></details>
+<div class="fot"><details><summary>Utelatt ({len(utelat)})</summary><ul>{utelat_html}</ul></details>
 <details><summary>Logg</summary><ul>{logg_html}</ul></details></div>
-</div></body></html>"""
+</div>
+<script>
+(function(){{
+const NØKKEL="nb_status_v1", DAG=864e5, OPPF_DAGER=4;
+let db={{}};try{{db=JSON.parse(localStorage.getItem(NØKKEL)||"{{}}")}}catch(e){{}}
+const lagre=()=>{{try{{localStorage.setItem(NØKKEL,JSON.stringify(db))}}catch(e){{}}}};
+const navn={{sendt:"E-post sendt",ringt:"Ringt",interessert:"Interessert",kunde:"Kunde",nei:"Takket nei",fulgtopp:"Fulgt opp"}};
+const fmt=t=>new Date(t).toLocaleDateString("no-NO",{{day:"numeric",month:"short"}});
+function tegn(){{
+  const n={{ny:0,oppf:0,int:0,kunde:0}};
+  document.querySelectorAll(".lead").forEach(el=>{{
+    const r=db[el.dataset.orgnr]||{{}}, s=r.s||"";
+    el.dataset.status=s;
+    el.querySelectorAll(".status button").forEach(b=>b.classList.toggle("på",b.dataset.s===s||(s==="fulgtopp"&&b.dataset.s==="sendt")));
+    const linje=el.querySelector(".statuslinje");
+    linje.textContent=s?navn[s]+" "+fmt(r.t)+(r.oppf?" · fulgt opp "+fmt(r.oppf):""):"";
+    const folgopp=(s==="sendt"&&Date.now()-r.t>OPPF_DAGER*DAG);
+    el.classList.toggle("folgopp",folgopp);el.classList.toggle("ferdig",s==="kunde"||s==="nei");
+    const ta=el.querySelector("textarea");if(document.activeElement!==ta)ta.value=r.notat||"";
+    if(!s)n.ny++;if(folgopp)n.oppf++;if(s==="interessert")n.int++;if(s==="kunde")n.kunde++;
+    el.dataset.gruppe=!s?"ny":folgopp?"oppf":(s==="kunde"||s==="nei")?"ferdig":s==="interessert"?"int":"aktiv";
+  }});
+  for(const k in n){{const e=document.getElementById("n-"+k);if(e)e.textContent=n[k]}}
+  filtrer();
+}}
+let filter="alle";
+function filtrer(){{document.querySelectorAll(".lead").forEach(el=>{{
+  const g=el.dataset.gruppe;el.style.display=(filter==="alle"||g===filter||(filter==="aktiv"&&g==="oppf"))?"":"none"}})}}
+function sett(orgnr,s){{const r=db[orgnr]||{{}};
+  if(s==="fulgtopp"){{r.oppf=Date.now();r.s="fulgtopp";}}
+  else if(r.s===s){{delete r.s;delete r.t;}} else {{r.s=s;r.t=Date.now();}}
+  db[orgnr]=r;lagre();tegn();}}
+document.addEventListener("click",e=>{{
+  const lead=e.target.closest(".lead");
+  const sb=e.target.closest(".status button");if(sb&&lead){{sett(lead.dataset.orgnr,sb.dataset.s);return;}}
+  const auto=e.target.closest("[data-auto]");if(auto&&lead){{const r=db[lead.dataset.orgnr]||{{}};
+    if(auto.dataset.auto==="fulgtopp"||!r.s)sett(lead.dataset.orgnr,auto.dataset.auto);}}
+  const fb=e.target.closest(".filter button");if(fb){{filter=fb.dataset.f;
+    document.querySelectorAll(".filter button").forEach(b=>b.classList.toggle("på",b===fb));filtrer();}}
+}});
+document.addEventListener("input",e=>{{if(e.target.tagName==="TEXTAREA"){{const lead=e.target.closest(".lead");
+  const r=db[lead.dataset.orgnr]||{{}};r.notat=e.target.value;db[lead.dataset.orgnr]=r;lagre();}}}});
+tegn();
+}})();
+</script>
+</body></html>"""
 
 
 # ---------------- låst (kryptert) rapportside ----------------

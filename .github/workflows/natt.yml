@@ -32,6 +32,8 @@ jobs:
         run: python3 nattmaskin.py nettsjekk
 
       - name: Lag demoer og morgenrapport
+        env:
+          PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
         run: python3 nattmaskin.py bygg --utelat-fil data/utelat.json
 
       - name: Krypter og publiser morgenrapporten

@@ -6,6 +6,10 @@ on:
       dato:
         description: "Dato (ÅÅÅÅ-MM-DD). La stå tom for i dag."
         required: false
+      bygg_demoer:
+        description: "Lag demo-sidene på nytt med nyeste design (og bilder)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -26,7 +30,9 @@ jobs:
         with:
           ref: main
       - name: Lag rapporten på nytt
-        run: python3 nattmaskin.py gjenskap "${{ inputs.dato }}"
+        env:
+          PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
+        run: python3 nattmaskin.py gjenskap "${{ inputs.dato }}" ${{ inputs.bygg_demoer && '--bygg-demoer' || '' }}
       - name: Krypter og publiser
         env:
           RAPPORT_PASSORD: ${{ secrets.RAPPORT_PASSORD }}
