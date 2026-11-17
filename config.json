@@ -1,0 +1,127 @@
+{
+  "kommunenummer": "4601",
+  "maks_kandidater_per_natt": 30,
+  "maks_demoer_per_natt": 20,
+  "selger": {
+    "navn": "Lars Killingberg",
+    "telefon": "915 67 489",
+    "epost": "killingberglars@gmail.com"
+  },
+  "pris": {
+    "oppstart": 1490,
+    "per_mnd": 349
+  },
+  "demo_base_url": "https://larskill.github.io/NattBott/demo",
+  "organisasjonsformer": [
+    "AS",
+    "ENK",
+    "ANS",
+    "DA",
+    "NUF"
+  ],
+  "bransjer": [
+    {
+      "id": "sykkel",
+      "navn": "Sykkelverksted / sykkelbutikk",
+      "mal": "sykkel",
+      "sok": [
+        {
+          "navn": "sykkel"
+        },
+        {
+          "navn": "bike"
+        }
+      ],
+      "navn_regex": "sykkel|\\bbike",
+      "ekskluder_kode_prefiks": [
+        "56.",
+        "64.",
+        "68.",
+        "70."
+      ]
+    },
+    {
+      "id": "musikk",
+      "navn": "Musikkundervisning",
+      "mal": "musikk",
+      "sok": [
+        {
+          "naeringskode": "85.52"
+        }
+      ],
+      "kode_prefiks": [
+        "85.52"
+      ],
+      "krev_navn_regex": "musikk|piano|gitar|sang|vokal|fiolin|tromme|music|kor\\b|band|cello|fløyte|bass|klaver|orgel"
+    },
+    {
+      "id": "frisor",
+      "navn": "Frisør",
+      "mal": "frisor",
+      "sok": [
+        {
+          "naeringskode": "96.21"
+        }
+      ],
+      "kode_prefiks": [
+        "96.21",
+        "96.02"
+      ],
+      "ekskluder_regex": "nail|negl|lash|vipp|brow|bryn|tattoo|tatovering"
+    },
+    {
+      "id": "rorlegger",
+      "navn": "Rørlegger",
+      "mal": "rorlegger",
+      "sok": [
+        {
+          "naeringskode": "43.22"
+        }
+      ],
+      "kode_prefiks": [
+        "43.22"
+      ],
+      "ekskluder_regex": "ventilasjon"
+    },
+    {
+      "id": "elektriker",
+      "navn": "Elektriker",
+      "mal": "elektriker",
+      "sok": [
+        {
+          "naeringskode": "43.21"
+        }
+      ],
+      "kode_prefiks": [
+        "43.21"
+      ]
+    },
+    {
+      "id": "maler",
+      "navn": "Maler",
+      "mal": "maler",
+      "sok": [
+        {
+          "naeringskode": "43.34"
+        }
+      ],
+      "kode_prefiks": [
+        "43.34"
+      ]
+    },
+    {
+      "id": "snekker",
+      "navn": "Snekker / tømrer",
+      "mal": "snekker",
+      "sok": [
+        {
+          "naeringskode": "43.32"
+        }
+      ],
+      "kode_prefiks": [
+        "43.32"
+      ]
+    }
+  ],
+  "rapport_til": "killingberglars@gmail.com"
+}

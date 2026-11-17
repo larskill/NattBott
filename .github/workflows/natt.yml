@@ -1,0 +1,57 @@
+name: Nattmaskin
+
+on:
+  schedule:
+    - cron: "17 2 * * *"   # hver natt ca. kl. 03:17 norsk tid
+  workflow_dispatch:        # «Run workflow»-knapp for manuell kjøring
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: nattmaskin
+  cancel-in-progress: false
+
+jobs:
+  natt:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Hent bedrifter fra Brønnøysund
+        run: python3 nattmaskin.py hent
+
+      - name: Sjekk om de allerede har nettside
+        run: python3 nattmaskin.py nettsjekk
+
+      - name: Lag demoer og morgenrapport
+        run: python3 nattmaskin.py bygg --utelat-fil data/utelat.json
+
+      - name: Lagre demoer og status i repoet
+        run: |
+          git config user.name "nattmaskin"
+          git config user.email "nattmaskin@users.noreply.github.com"
+          git add docs data/sett.json
+          git diff --cached --quiet || git commit -m "Natt $(date +%F)"
+          git push
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Send morgenrapport på e-post
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python3 nattmaskin.py epost

@@ -1,0 +1,6 @@
+# Kontaktdata og salgsutkast holdes utenfor det offentlige repoet
+data/kandidater.json
+data/leads-*.json
+data/utelat.json
+rapporter/
+__pycache__/

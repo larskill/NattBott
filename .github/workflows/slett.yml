@@ -1,0 +1,39 @@
+name: Slett demo (bedriften sa nei)
+
+on:
+  workflow_dispatch:
+    inputs:
+      orgnr:
+        description: "Organisasjonsnummer (flere kan skilles med komma)"
+        required: true
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: nattmaskin
+  cancel-in-progress: false
+
+jobs:
+  slett:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+      - name: Slett demo og merk «nei»
+        run: python3 nattmaskin.py slett "${{ inputs.orgnr }}"
+      - name: Lagre
+        run: |
+          git config user.name "nattmaskin"
+          git config user.email "nattmaskin@users.noreply.github.com"
+          git add -A docs data/sett.json
+          git diff --cached --quiet || git commit -m "Slettet ${{ inputs.orgnr }}"
+          git push
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - uses: actions/deploy-pages@v4
