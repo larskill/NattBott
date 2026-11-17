@@ -457,42 +457,85 @@ def hent_side(url):
 
 
 def domener_a_sjekke(k):
+    """Gjetter domener ut fra e-post og navn: belezamjbeauty.no, belezabeauty.no, beleza-beauty.no osv."""
     doms = []
     dom = epostdomene(k.get("epost", ""))
     if dom and dom not in GENERISKE_EPOSTDOMENER and not REGNSKAP_ORD.search(dom):
         doms.append(dom)
-    base = slugify(k["navn"])
-    for variant in (base.replace("-", ""), base):
-        if len(variant) >= 4:
-            doms.append(variant + ".no")
-    return list(dict.fromkeys(doms))
+    ord_ = [w for w in slugify(k["navn"]).split("-") if w and w not in ("og", "i", "the", "by", "and", "as")]
+    lange = [w for w in ord_ if len(w) >= 3]
+    baser = ["".join(ord_), "-".join(ord_), "".join(lange), "-".join(lange)]
+    if len(lange) >= 2:
+        baser += [lange[0] + lange[-1], lange[0] + "-" + lange[-1], lange[0] + lange[1]]
+    if lange and len(lange[0]) >= 6:
+        baser.append(lange[0])
+    for i, base in enumerate(dict.fromkeys(x for x in baser if len(x) >= 4)):
+        doms.append(base + ".no")
+        if i < 2:
+            doms.append(base + ".com")
+    return list(dict.fromkeys(doms))[:12]
+
+
+def finn_nettside(kand):
+    """Returnerer domenet hvis bedriften ser ut til å ha en nettside, ellers None (og evt. flagg)."""
+    ord_ = [w for w in fold(kand["navn"]).split() if len(w) >= 4]
+    trengs = min(2, len(ord_)) or 1
+    epostdom = epostdomene(kand.get("epost", ""))
+    for dom in domener_a_sjekke(kand):
+        html_ = None
+        for url in (f"https://{dom}", f"https://www.{dom}", f"http://{dom}"):
+            html_ = hent_side(url)
+            if html_:
+                break
+        if not html_:
+            continue
+        if PARKERING.search(html_) and len(html_) < 20000:
+            continue
+        tekst = fold(html_)
+        if dom == epostdom or sum(1 for w in ord_ if w in tekst) >= trengs:
+            return dom
+        kand.setdefault("flagg", []).append(f"{dom} svarer – sjekk om det er deres side")
+    return None
 
 
 def kmd_nettsjekk(args, cfg):
     sti = os.path.join(DATA, "kandidater.json")
     k = les_json(sti, {"kandidater": []})
     utelat = les_json(os.path.join(DATA, "utelat.json"), {})
-    nokkelord = lambda navn: [w for w in fold(navn).split() if len(w) >= 4]  # noqa: E731
     for kand in k["kandidater"]:
-        ord_ = nokkelord(kand["navn"])
-        for dom in domener_a_sjekke(kand):
-            html_ = None
-            for url in (f"https://{dom}", f"https://www.{dom}", f"http://{dom}"):
-                html_ = hent_side(url)
-                if html_:
-                    break
-            if not html_:
-                continue
-            tekst = fold(html_)
-            if PARKERING.search(html_) and len(html_) < 20000:
-                continue
-            if any(w in tekst for w in ord_) or dom == epostdomene(kand.get("epost", "")):
-                utelat[kand["orgnr"]] = f"har trolig nettside: {dom}"
-                break
-            kand["flagg"].append(f"{dom} svarer – sjekk om det er deres side")
+        dom = finn_nettside(kand)
+        if dom:
+            utelat[kand["orgnr"]] = f"har trolig nettside: {dom}"
     skriv_json(sti, k)
     skriv_json(os.path.join(DATA, "utelat.json"), utelat)
     print(f"Nettsjekk: {len(utelat)} utelatt")
+
+
+def kmd_sjekk_igjen(args, cfg):
+    """Sjekker eksisterende demoer på nytt; fjerner demoer for bedrifter som har nettside."""
+    import shutil
+    sett = les_json(os.path.join(DATA, "sett.json"), {})
+    dato = args.dato or dt.date.today().isoformat()
+    funnet = []
+    for onr, info in list(sett.items()):
+        if info.get("status") != "demo" or info.get("dato") != dato:
+            continue
+        try:
+            e = api_get_enhet(onr)
+        except Exception:  # noqa: BLE001
+            continue
+        kand = {"navn": pent_navn(e.get("navn", "")), "epost": e.get("epostadresse") or ""}
+        dom = finn_nettside(kand)
+        if dom:
+            funnet.append((kand["navn"], dom))
+            mappe = os.path.join(DEMO_DIR, info.get("slug", ""))
+            if info.get("slug") and os.path.isdir(mappe):
+                shutil.rmtree(mappe)
+            sett[onr] = {"dato": dato, "status": "har_nettside", "grunn": dom}
+    skriv_json(os.path.join(DATA, "sett.json"), sett)
+    for navn, dom in funnet:
+        print(f"Har nettside – demo fjernet: {navn} ({dom})")
+    print(f"Sjekket på nytt: {len(funnet)} hadde nettside")
 
 
 # ---------- morgenrapport på e-post ----------
@@ -631,6 +674,8 @@ def main():
     sub.add_parser("epost")
     pr = sub.add_parser("publiser-rapport")
     pr.add_argument("dato", nargs="?", default="")
+    si = sub.add_parser("sjekk-igjen")
+    si.add_argument("dato", nargs="?", default="")
     g = sub.add_parser("gjenskap")
     g.add_argument("dato", nargs="?", default="", help="YYYY-MM-DD (tom = i dag)")
     g.add_argument("--bygg-demoer", action="store_true", help="lag demo-sidene på nytt med nyeste maler")
@@ -642,7 +687,8 @@ def main():
         sys.exit("Fant ikke config.json")
     {"hent": kmd_hent, "bygg": kmd_bygg, "slett": kmd_slett,
      "nettsjekk": kmd_nettsjekk, "epost": kmd_epost, "gjenskap": kmd_gjenskap,
-     "publiser-rapport": kmd_publiser_rapport}[args.kmd](args, cfg)
+     "publiser-rapport": kmd_publiser_rapport,
+     "sjekk-igjen": kmd_sjekk_igjen}[args.kmd](args, cfg)
 
 
 if __name__ == "__main__":

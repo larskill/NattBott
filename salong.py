@@ -24,8 +24,8 @@ INNHOLD = {
                     ("Skånsomme produkter", "Farger og pleie som tar vare på håret over tid."),
                     ("Lett å stelle", "Frisyrer som fungerer også når du gjør den selv.")],
         "cta": "Bestill time",
-        "sok": ["hair salon interior", "hairdresser styling hair", "hair stylist cutting hair",
-                "hair color salon", "barber shop interior"],
+        "sok": ["hairdresser scissors comb", "hair texture close up", "hair care products",
+                "hair brush detail", "salon tools flatlay"],
     },
     "afro": {
         "kicker": "Afro & barber i {sted}",
@@ -44,8 +44,8 @@ INNHOLD = {
                     ("Skarpe linjer", "Fades og konturer med presisjon."),
                     ("Drop-in", "Kom innom – eller bestill time på telefon.")],
         "cta": "Bestill time",
-        "sok": ["black barber haircut", "afro hair barbershop", "african braids hairstyle",
-                "fade haircut black man", "box braids hairstyle"],
+        "sok": ["afro comb pick", "barber clippers tools", "barber tools flatlay",
+                "hair oil bottle", "african pattern textile"],
     },
     "barber": {
         "kicker": "Barbershop i {sted}",
@@ -64,8 +64,8 @@ INNHOLD = {
                     ("Skjeggstell", "Trim, form og varmt håndkle."),
                     ("Drop-in", "Kom innom – eller ring og bestill.")],
         "cta": "Bestill time",
-        "sok": ["barbershop interior", "barber cutting hair", "beard trim barber",
-                "fade haircut barber", "barber shop chair"],
+        "sok": ["barber clippers tools", "straight razor shaving brush", "barber tools flatlay",
+                "beard oil bottle", "vintage barber pole"],
     },
     "skjonnhet": {
         "kicker": "Hud- og skjønnhetspleie i {sted}",
@@ -84,8 +84,8 @@ INNHOLD = {
                     ("Kvalitetsprodukter", "Utvalgte merker vi kjenner godt og stoler på."),
                     ("Rolig atmosfære", "En time for deg selv, uten stress.")],
         "cta": "Bestill behandling",
-        "sok": ["beauty salon interior", "facial treatment spa", "manicure nails salon",
-                "eyelash beauty treatment", "spa relaxing skincare"],
+        "sok": ["skincare products flatlay", "nail polish bottles", "spa towels stones",
+                "cosmetics texture close up", "skincare serum bottle"],
     },
 }
 
@@ -142,7 +142,7 @@ def variant_for(k):
 def _bilde(b, klasse, plassholder_tekst, i):
     if b:
         return (f'<figure class="{klasse}"><img src="{E(b["src"])}" alt="{E(b.get("alt") or "")}" loading="lazy">'
-                f'</figure>')
+                f'<small class="eks">Eksempelbilde</small></figure>')
     return (f'<figure class="{klasse} tom t{i % 3}"><span>{E(plassholder_tekst)}</span></figure>')
 
 
@@ -254,6 +254,8 @@ figure.tom.t2{{background:radial-gradient(90% 120% at 90% 90%,color-mix(in srgb,
 /* --- variant: rose (lys, feminin) --- */
 .p-rose h1{{font-style:italic;font-weight:500}}.p-rose .knapp{{border-radius:999px}}
 .p-rose .hero figure{{border-radius:220px 220px 6px 6px}}.p-rose .stripe figure:nth-child(2){{border-radius:999px 999px 0 0}}
+.eks{{position:absolute;right:10px;bottom:10px;z-index:2;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+ background:rgba(0,0,0,.45);color:#fff;padding:3px 8px;border-radius:3px}}
 /* --- felles seksjoner --- */
 .meny{{display:grid;grid-template-columns:.8fr 1.2fr;gap:70px}}
 .meny ul{{list-style:none;padding:0}}
