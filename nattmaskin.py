@@ -427,15 +427,38 @@ def kmd_epost(args, cfg):
         f"- {x['navn']} ({x['bransje_navn']}): {x['demo_url']}" for x in leads))
     msg.add_alternative(html_, subtype="html")
     msg.add_attachment(html_.encode("utf-8"), maintype="text", subtype="html", filename=f"morgenrapport-{idag}.html")
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl_kontekst()) as s:
-        s.login(bruker, passord)
-        s.send_message(msg)
+    # Trygg diagnose uten å avsløre passordet
+    print(f"Avsender: {bruker} | apppassord: {len(passord)} tegn, "
+          f"bare små bokstaver: {'ja' if passord.isalpha() and passord.islower() else 'nei'}")
+    feil = []
+    for metode in ("SSL 465", "STARTTLS 587"):
+        try:
+            if metode == "SSL 465":
+                s = smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context(), timeout=30)
+            else:
+                s = smtplib.SMTP("smtp.gmail.com", 587, timeout=30)
+                s.ehlo()
+                s.starttls(context=ssl.create_default_context())
+            s.ehlo()
+            s.login(bruker, passord)
+            s.send_message(msg)
+            s.quit()
+            break
+        except smtplib.SMTPAuthenticationError as e:
+            feil.append(f"{metode}: Gmail godtok ikke innloggingen ({e.smtp_code}) "
+                        f"{e.smtp_error.decode(errors='ignore')[:200]}")
+        except Exception as e:  # noqa: BLE001
+            feil.append(f"{metode}: {type(e).__name__}: {e}")
+    else:
+        print("\n".join(feil))
+        sys.exit("E-posten ble ikke sendt. Sjekk at secret NATTBOTT er apppassordet (16 små bokstaver).")
     print("Morgenrapport sendt til", msg["To"])
 
 
 def kmd_gjenskap(args, cfg):
     """Lager morgenrapporten på nytt for demoer laget en gitt dato (f.eks. hvis e-posten feilet)."""
     idag = dt.date.today()
+    args.dato = args.dato or idag.isoformat()
     sett = les_json(os.path.join(DATA, "sett.json"), {})
     leads = []
     for onr, info in sett.items():
@@ -476,7 +499,7 @@ def main():
     sub.add_parser("nettsjekk")
     sub.add_parser("epost")
     g = sub.add_parser("gjenskap")
-    g.add_argument("dato", help="YYYY-MM-DD")
+    g.add_argument("dato", nargs="?", default="", help="YYYY-MM-DD (tom = i dag)")
     sl = sub.add_parser("slett")
     sl.add_argument("orgnr", help="kommaseparerte orgnr som har takket nei")
     args = p.parse_args()

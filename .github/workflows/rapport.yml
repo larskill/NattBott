@@ -1,0 +1,25 @@
+name: Send rapporten på nytt
+
+on:
+  workflow_dispatch:
+    inputs:
+      dato:
+        description: "Dato (ÅÅÅÅ-MM-DD). La stå tom for i dag."
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  rapport:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - name: Lag rapporten på nytt
+        run: python3 nattmaskin.py gjenskap "${{ inputs.dato || '' }}"
+      - name: Send på e-post
+        env:
+          GMAIL_APP_PASSWORD: ${{ secrets.NATTBOTT }}
+        run: python3 nattmaskin.py epost
