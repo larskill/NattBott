@@ -11,12 +11,11 @@ Demo-sidene er merket tydelig som forslag. De har `noindex`, og `robots.txt` ste
 
 ## Oppsett (én gang)
 1. **Pages:** Settings → Pages → *Build and deployment* → Source: **GitHub Actions**.
-2. **Gmail-apppassord:** Slå på totrinnsbekreftelse i Google-kontoen. Gå deretter til myaccount.google.com/apppasswords og lag et passord med navnet «NattBott».
-3. **Secrets:** Settings → Secrets and variables → Actions → *New repository secret*:
-   - `NATTBOTT` = apppassordet på 16 tegn. Del det aldri med noen. Avsender er e-posten i config.json.
-4. **Første kjøring:** Actions → *Nattmaskin* → **Run workflow**. Etter det går den av seg selv hver natt ca. kl. 03:17.
+2. **Passord til rapportsiden:** Settings → Secrets and variables → Actions → *New repository secret*: `RAPPORT_PASSORD` = et passord du finner på selv.
+3. **Første kjøring:** Actions → *Nattmaskin* → **Run workflow**. Etter det går den av seg selv hver natt ca. kl. 03:17.
 
 ## Daglig bruk
-- Morgenrapporten kommer på e-post. Trykk «Send e-post» eller «Ring» for hver bedrift.
+- Morgenrapporten ligger på https://larskill.github.io/NattBott/rapport/ (kryptert, åpnes med RAPPORT_PASSORD). Trykk «Send e-post» eller «Ring» for hver bedrift.
+- Mangler en rapport: Actions → *Lag rapporten på nytt*.
 - Sier en bedrift nei: Actions → *Slett demo* → Run workflow → skriv inn orgnr.
 - Pris, tekster og bransjer endres i `config.json` og `maler.py`.

@@ -488,6 +488,37 @@ def api_get_enhet(orgnr):
         return json.load(r)
 
 
+# ---------- kryptert rapportside på nettstedet ----------
+
+def kmd_publiser_rapport(args, cfg):
+    """Krypterer morgenrapporten (AES-256, passord fra RAPPORT_PASSORD) og legger den i docs/rapport/."""
+    import base64
+    import subprocess
+    passord = os.environ.get("RAPPORT_PASSORD", "")
+    if not passord:
+        print("::warning::Mangler secret RAPPORT_PASSORD – rapportsiden ble ikke oppdatert.")
+        return
+    kilde = os.path.join(RAPPORT_DIR, "siste.html")
+    if not os.path.exists(kilde):
+        print("::warning::Ingen rapport å publisere.")
+        return
+    kryptert = subprocess.run(
+        ["openssl", "enc", "-aes-256-cbc", "-pbkdf2", "-iter", "200000", "-md", "sha256", "-salt",
+         "-pass", "env:RAPPORT_PASSORD", "-in", kilde],
+        check=True, capture_output=True, env=dict(os.environ)).stdout
+    data = base64.b64encode(kryptert).decode()
+    dato = args.dato or dt.date.today().isoformat()
+    rot = os.path.join(ROT, "docs", "rapport")
+    arkiv = os.path.join(rot, "arkiv")
+    os.makedirs(arkiv, exist_ok=True)
+    with open(os.path.join(arkiv, f"{dato}.html"), "w", encoding="utf-8") as f:
+        f.write(maler.laast_side(data, dato, [], "../"))
+    datoer = sorted((n[:-5] for n in os.listdir(arkiv) if n.endswith(".html")), reverse=True)[:14]
+    with open(os.path.join(rot, "index.html"), "w", encoding="utf-8") as f:
+        f.write(maler.laast_side(data, dato, datoer, ""))
+    print(f"Kryptert rapport publisert for {dato} (arkiv: {len(datoer)} dager)")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="kmd", required=True)
@@ -498,6 +529,8 @@ def main():
     b.add_argument("--utelat-fil", help="JSON {orgnr: grunn} fra nettsjekken")
     sub.add_parser("nettsjekk")
     sub.add_parser("epost")
+    pr = sub.add_parser("publiser-rapport")
+    pr.add_argument("dato", nargs="?", default="")
     g = sub.add_parser("gjenskap")
     g.add_argument("dato", nargs="?", default="", help="YYYY-MM-DD (tom = i dag)")
     sl = sub.add_parser("slett")
@@ -507,7 +540,8 @@ def main():
     if cfg is None:
         sys.exit("Fant ikke config.json")
     {"hent": kmd_hent, "bygg": kmd_bygg, "slett": kmd_slett,
-     "nettsjekk": kmd_nettsjekk, "epost": kmd_epost, "gjenskap": kmd_gjenskap}[args.kmd](args, cfg)
+     "nettsjekk": kmd_nettsjekk, "epost": kmd_epost, "gjenskap": kmd_gjenskap,
+     "publiser-rapport": kmd_publiser_rapport}[args.kmd](args, cfg)
 
 
 if __name__ == "__main__":

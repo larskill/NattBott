@@ -34,6 +34,11 @@ jobs:
       - name: Lag demoer og morgenrapport
         run: python3 nattmaskin.py bygg --utelat-fil data/utelat.json
 
+      - name: Krypter og publiser morgenrapporten
+        env:
+          RAPPORT_PASSORD: ${{ secrets.RAPPORT_PASSORD }}
+        run: python3 nattmaskin.py publiser-rapport
+
       - name: Lagre demoer og status i repoet
         run: |
           git config user.name "nattmaskin"
@@ -49,8 +54,3 @@ jobs:
           path: docs
       - id: deploy
         uses: actions/deploy-pages@v4
-
-      - name: Send morgenrapport på e-post
-        env:
-          GMAIL_APP_PASSWORD: ${{ secrets.NATTBOTT }}
-        run: python3 nattmaskin.py epost

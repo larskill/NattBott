@@ -1,4 +1,4 @@
-name: Send rapporten på nytt
+name: Lag rapporten på nytt
 
 on:
   workflow_dispatch:
@@ -8,18 +8,39 @@ on:
         required: false
 
 permissions:
-  contents: read
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: nattmaskin
+  cancel-in-progress: false
 
 jobs:
   rapport:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
     steps:
       - uses: actions/checkout@v5
         with:
           ref: main
       - name: Lag rapporten på nytt
-        run: python3 nattmaskin.py gjenskap "${{ inputs.dato || '' }}"
-      - name: Send på e-post
+        run: python3 nattmaskin.py gjenskap "${{ inputs.dato }}"
+      - name: Krypter og publiser
         env:
-          GMAIL_APP_PASSWORD: ${{ secrets.NATTBOTT }}
-        run: python3 nattmaskin.py epost
+          RAPPORT_PASSORD: ${{ secrets.RAPPORT_PASSORD }}
+        run: python3 nattmaskin.py publiser-rapport "${{ inputs.dato }}"
+      - name: Lagre
+        run: |
+          git config user.name "nattmaskin"
+          git config user.email "nattmaskin@users.noreply.github.com"
+          git add docs
+          git diff --cached --quiet || git commit -m "Rapport ${{ inputs.dato }}"
+          git pull --rebase origin main
+          git push origin HEAD:main
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - uses: actions/deploy-pages@v4

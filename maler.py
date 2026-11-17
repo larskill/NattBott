@@ -337,3 +337,49 @@ details summary{{cursor:pointer;font-size:14px;color:var(--dempet);margin-top:4p
 <div class="fot"><details><summary>Utelatt i natt ({len(utelat)})</summary><ul>{utelat_html}</ul></details>
 <details><summary>Logg</summary><ul>{logg_html}</ul></details></div>
 </div></body></html>"""
+
+
+# ---------------- låst (kryptert) rapportside ----------------
+
+def laast_side(data_b64, dato, datoer, prefiks):
+    arkiv = "".join(f'<a href="{prefiks}arkiv/{d}.html">{d}</a>' for d in datoer)
+    arkiv_html = f'<p class="arkiv">Tidligere: {arkiv}</p>' if arkiv else ""
+    return f"""<!doctype html><html lang="no"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Morgenrapport {dato}</title><style>
+body{{margin:0;min-height:100vh;display:grid;place-items:center;background:#FAF8F4;color:#1C2321;font:16px/1.5 system-ui,-apple-system,'Segoe UI',sans-serif}}
+@media(prefers-color-scheme:dark){{body{{background:#151917;color:#ECEFEC}}input{{background:#1E2321;color:#ECEFEC;border-color:#2E3532}}}}
+form{{width:min(360px,90vw)}}h1{{font-size:22px;margin:0 0 4px}}p{{margin:0 0 16px;opacity:.75}}
+input[type=password]{{width:100%;box-sizing:border-box;font-size:17px;padding:12px 14px;border:1px solid #D9D4CA;border-radius:10px;margin-bottom:10px}}
+button{{width:100%;font-size:16px;font-weight:600;padding:12px;border:0;border-radius:10px;background:#1F6F5C;color:#fff;cursor:pointer}}
+label{{display:flex;gap:8px;align-items:center;font-size:14px;margin:4px 0 14px;opacity:.8}}
+.feil{{color:#B3261E;min-height:22px;font-size:14px}}.arkiv{{font-size:13px;margin-top:18px}}.arkiv a{{margin-right:10px;color:inherit}}
+</style></head><body>
+<form id="f"><h1>Morgenrapport</h1><p>{dato} · skriv passordet ditt</p>
+<input type="password" id="pw" autocomplete="current-password" autofocus placeholder="Passord">
+<label><input type="checkbox" id="husk"> Husk på denne enheten</label>
+<button>Åpne</button><div class="feil" id="feil"></div>{arkiv_html}</form>
+<script>
+const DATA="{data_b64}";
+async function apne(pw){{
+  const raw=Uint8Array.from(atob(DATA),c=>c.charCodeAt(0));
+  if(new TextDecoder().decode(raw.slice(0,8))!=="Salted__")throw new Error("format");
+  const salt=raw.slice(8,16),ct=raw.slice(16);
+  const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveBits"]);
+  const bits=new Uint8Array(await crypto.subtle.deriveBits({{name:"PBKDF2",salt,iterations:200000,hash:"SHA-256"}},base,384));
+  const key=await crypto.subtle.importKey("raw",bits.slice(0,32),"AES-CBC",false,["decrypt"]);
+  const html=new TextDecoder().decode(await crypto.subtle.decrypt({{name:"AES-CBC",iv:bits.slice(32,48)}},key,ct));
+  if(!/^<!doctype/i.test(html.trim()))throw new Error("feil passord");
+  return html;
+}}
+async function vis(pw,lagre){{
+  try{{const html=await apne(pw);
+    if(lagre){{try{{localStorage.setItem("nb_pw",pw)}}catch(e){{}}}}
+    document.open();document.write(html);document.close();
+  }}catch(e){{document.getElementById("feil").textContent="Feil passord – prøv igjen.";
+    try{{localStorage.removeItem("nb_pw")}}catch(e){{}}}}
+}}
+document.getElementById("f").addEventListener("submit",ev=>{{ev.preventDefault();
+  vis(document.getElementById("pw").value,document.getElementById("husk").checked);}});
+try{{const lagret=localStorage.getItem("nb_pw");if(lagret)vis(lagret,false);}}catch(e){{}}
+</script></body></html>"""
