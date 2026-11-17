@@ -31,7 +31,7 @@ jobs:
           ref: main
       - name: Lag rapporten på nytt
         env:
-          PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
+          UNSPLASH_KEY: ${{ secrets.UNSPLASH_KEY }}
         run: python3 nattmaskin.py gjenskap "${{ inputs.dato }}" ${{ inputs.bygg_demoer && '--bygg-demoer' || '' }}
       - name: Krypter og publiser
         env:
@@ -41,7 +41,7 @@ jobs:
         run: |
           git config user.name "nattmaskin"
           git config user.email "nattmaskin@users.noreply.github.com"
-          git add docs
+          git add docs $(ls data/unsplash_brukt.json 2>/dev/null)
           git diff --cached --quiet || git commit -m "Rapport ${{ inputs.dato }}"
           git pull --rebase origin main
           git push origin HEAD:main

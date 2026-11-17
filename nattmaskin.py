@@ -240,29 +240,69 @@ def til_kandidat(e, b, poeng, grunner, flagg):
     }
 
 
-# ---------- bilder fra Pexels (gratis lisens) ----------
+# ---------- bilder fra Unsplash (eller Pexels) – gratis lisens ----------
 
 _BILDE_CACHE = {}
+_UNSPLASH_NYE = []
 
 
-def pexels_sok(sporring):
-    nokkel = os.environ.get("PEXELS_KEY", "").strip()
-    if not nokkel:
-        return []
+def _hent_json(url, headers):
+    req = urllib.request.Request(url, headers=dict(headers, **{"User-Agent": "nattmaskin/1.0"}))
+    with urllib.request.urlopen(req, timeout=30, context=ssl_kontekst()) as r:
+        return json.load(r)
+
+
+def bilde_sok(sporring):
     if sporring in _BILDE_CACHE:
         return _BILDE_CACHE[sporring]
-    url = "https://api.pexels.com/v1/search?" + urllib.parse.urlencode(
-        {"query": sporring, "per_page": 40, "orientation": "portrait"})
-    req = urllib.request.Request(url, headers={"Authorization": nokkel, "User-Agent": "nattmaskin/1.0"})
+    fotos = []
+    unsplash = os.environ.get("UNSPLASH_KEY", "").strip()
+    pexels = os.environ.get("PEXELS_KEY", "").strip()
     try:
-        with urllib.request.urlopen(req, timeout=30, context=ssl_kontekst()) as r:
-            fotos = json.load(r).get("photos", [])
+        if unsplash:
+            url = "https://api.unsplash.com/search/photos?" + urllib.parse.urlencode(
+                {"query": sporring, "per_page": 30, "orientation": "portrait", "content_filter": "high"})
+            data = _hent_json(url, {"Authorization": f"Client-ID {unsplash}", "Accept-Version": "v1"})
+            utm = "?utm_source=nattbott&utm_medium=referral"
+            for f in data.get("results", []):
+                fotos.append({"id": f["id"], "src": f["urls"]["raw"] + "&w=1400&q=80&fm=jpg&fit=max",
+                              "alt": f.get("alt_description") or "", "fotograf": f["user"]["name"],
+                              "fotograf_url": f["user"]["links"]["html"] + utm, "kilde": "Unsplash",
+                              "kilde_url": "https://unsplash.com/" + utm,
+                              "nedlasting": f["links"]["download_location"]})
+        elif pexels:
+            url = "https://api.pexels.com/v1/search?" + urllib.parse.urlencode(
+                {"query": sporring, "per_page": 40, "orientation": "portrait"})
+            data = _hent_json(url, {"Authorization": pexels})
+            for f in data.get("photos", []):
+                fotos.append({"id": str(f["id"]), "src": f["src"].get("large2x") or f["src"]["large"],
+                              "alt": f.get("alt") or "", "fotograf": f.get("photographer", ""),
+                              "fotograf_url": f.get("photographer_url", ""), "kilde": "Pexels",
+                              "kilde_url": "https://www.pexels.com"})
     except Exception as e:  # noqa: BLE001
-        print(f"::warning::Pexels-søk feilet ({sporring}): {e}")
-        fotos = []
-    _BILDE_CACHE[sporring] = [{"src": f["src"].get("large2x") or f["src"]["large"], "alt": f.get("alt") or "",
-                                "fotograf": f.get("photographer", ""), "url": f.get("url", "")} for f in fotos]
-    return _BILDE_CACHE[sporring]
+        print(f"::warning::Bildesøk feilet ({sporring}): {e}")
+    _BILDE_CACHE[sporring] = fotos
+    return fotos
+
+
+def registrer_unsplash_bruk():
+    """Unsplash ber om et kall til download_location for bilder som tas i bruk (maks 35 per kjøring)."""
+    nokkel = os.environ.get("UNSPLASH_KEY", "").strip()
+    if not nokkel or not _UNSPLASH_NYE:
+        return
+    sti = os.path.join(DATA, "unsplash_brukt.json")
+    brukt = set(les_json(sti, []))
+    sendt = 0
+    for f in _UNSPLASH_NYE:
+        if f["id"] in brukt or sendt >= 35:
+            continue
+        try:
+            _hent_json(f["nedlasting"], {"Authorization": f"Client-ID {nokkel}", "Accept-Version": "v1"})
+            brukt.add(f["id"])
+            sendt += 1
+        except Exception:  # noqa: BLE001
+            pass
+    skriv_json(sti, sorted(brukt))
 
 
 def velg_bilder(kand, antall=5):
@@ -273,13 +313,15 @@ def velg_bilder(kand, antall=5):
     h = int(hashlib.sha1(kand["orgnr"].encode()).hexdigest(), 16)
     valgt = []
     for i in range(antall):
-        pool = pexels_sok(inn["sok"][(h + i) % len(inn["sok"])])
+        pool = bilde_sok(inn["sok"][(h + i) % len(inn["sok"])])
         if not pool:
             continue
         for j in range(len(pool)):
             kandidat = pool[(h // 7 + i * 11 + j) % len(pool)]
             if kandidat not in valgt:
                 valgt.append(kandidat)
+                if kandidat.get("nedlasting"):
+                    _UNSPLASH_NYE.append(kandidat)
                 break
     return valgt
 
@@ -367,6 +409,7 @@ def kmd_bygg(args, cfg):
             f.write(html)
     skriv_json(os.path.join(DATA, "sett.json"), sett)
     skriv_json(os.path.join(DATA, f"leads-{idag}.json"), laget)
+    registrer_unsplash_bruk()
     # robots + indeks som ikke lister kundene offentlig
     os.makedirs(DEMO_DIR, exist_ok=True)
     with open(os.path.join(ROT, "docs", "robots.txt"), "w") as f:
@@ -526,6 +569,10 @@ def kmd_gjenskap(args, cfg):
         kand["utkast"] = maler.utkast(kand, cfg)
         leads.append(kand)
     leads.sort(key=lambda k: -k["poeng"])
+    registrer_unsplash_bruk()
+    bilder_brukt = sum(1 for k in leads if k.get("bilder"))
+    if args.bygg_demoer:
+        print(f"Demoer bygget på nytt: {len(leads)} (med bilder: {bilder_brukt})")
     os.makedirs(RAPPORT_DIR, exist_ok=True)
     html_ = maler.morgenrapport(leads, {}, [f"Gjenskapt rapport for {args.dato}"], cfg, args.dato)
     for navn in (f"rapport-{args.dato}.html", "siste.html"):

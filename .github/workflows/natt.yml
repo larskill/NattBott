@@ -33,7 +33,7 @@ jobs:
 
       - name: Lag demoer og morgenrapport
         env:
-          PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
+          UNSPLASH_KEY: ${{ secrets.UNSPLASH_KEY }}
         run: python3 nattmaskin.py bygg --utelat-fil data/utelat.json
 
       - name: Krypter og publiser morgenrapporten
@@ -45,7 +45,7 @@ jobs:
         run: |
           git config user.name "nattmaskin"
           git config user.email "nattmaskin@users.noreply.github.com"
-          git add docs data/sett.json
+          git add docs data/sett.json $(ls data/unsplash_brukt.json 2>/dev/null)
           git diff --cached --quiet || git commit -m "Natt $(date +%F)"
           git pull --rebase origin main
           git push origin HEAD:main

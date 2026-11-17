@@ -95,9 +95,16 @@ def demo(k, cfg):
         f'<li><div><strong>{E(t)}</strong><span>{E(d)}</span></div><i></i><em>{E(p)}{" kr" if p[0].isdigit() or p.startswith("fra") else ""}</em></li>'
         for t, d, p in inn["meny"])
     verdier = "".join(f'<div class="verdi"><h3>{E(t)}</h3><p>{E(d)}</p></div>' for t, d in inn["verdier"])
-    kreditt = ", ".join(sorted({x["fotograf"] for x in k.get("bilder") or [] if x.get("fotograf")}))
-    kreditt_html = (f' · Eksempelbilder: {E(kreditt)} / <a href="https://www.pexels.com">Pexels</a>'
-                    if kreditt else "")
+    sett_ = {}
+    for x in k.get("bilder") or []:
+        if x.get("fotograf"):
+            sett_[x["fotograf"]] = x
+    kreditt_html = ""
+    if sett_:
+        deler = [f'<a href="{E(x.get("fotograf_url") or "#")}">{E(n)}</a>' for n, x in sett_.items()]
+        kilde = next(iter(sett_.values()))
+        kreditt_html = (f' · Eksempelbilder av {", ".join(deler)} på '
+                        f'<a href="{E(kilde.get("kilde_url") or "#")}">{E(kilde.get("kilde") or "")}</a>')
     kontakt = []
     if tlf:
         kontakt.append(f'<p><span>Telefon</span><a href="{tlf_lenke}">{E(tlf)}</a></p>')
