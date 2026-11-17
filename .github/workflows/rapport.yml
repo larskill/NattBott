@@ -35,6 +35,8 @@ jobs:
           ref: main
       - name: Sjekk nettsider på nytt
         if: ${{ inputs.sjekk_nettsider }}
+        env:
+          TAVILY_KEY: ${{ secrets.TAVILY_KEY }}
         run: python3 nattmaskin.py sjekk-igjen "${{ inputs.dato }}"
       - name: Lag rapporten på nytt
         env:

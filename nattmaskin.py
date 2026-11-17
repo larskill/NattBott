@@ -482,11 +482,59 @@ def domener_a_sjekke(k):
     return list(dict.fromkeys(doms))[:12]
 
 
+KATALOGER = re.compile(r"facebook|instagram|tiktok|linkedin|youtube|twitter|x\.com|gulesider|1881|proff|brreg|"
+                      r"purehelp|finn\.no|google|bing|yelp|tripadvisor|bedriftssok|webagent|21st\.ai|funnelfeedr|"
+                      r"companexia|dnb\.com|utdanning|bytt\.no|mittanbud|fixa|wikipedia|kartverket|enirogs|"
+                      r"hitta|kompass|opencorporates|norgeshandelen|regnskapstall|forvalt|allabolag|merinfo", re.I)
+BOOKING = re.compile(r"timma|bestille\.no|fresha|booksy|treatwell|planway|bokadirekt|easyfrisor|onlinebooq|setmore", re.I)
+_SOK_BRUKT = []
+
+
+def nettsok(sporring):
+    """Websøk via Tavily (gratis: 1000 søk/mnd). Returnerer liste med (url, tittel)."""
+    nokkel = os.environ.get("TAVILY_KEY", "").strip()
+    if not nokkel or len(_SOK_BRUKT) >= 35:
+        return []
+    _SOK_BRUKT.append(1)
+    body = json.dumps({"query": sporring, "max_results": 6, "search_depth": "basic", "api_key": nokkel}).encode()
+    req = urllib.request.Request("https://api.tavily.com/search", data=body, method="POST",
+                                 headers={"Content-Type": "application/json", "Authorization": f"Bearer {nokkel}"})
+    try:
+        with urllib.request.urlopen(req, timeout=30, context=ssl_kontekst()) as r:
+            return [(x.get("url", ""), x.get("title", "")) for x in json.load(r).get("results", [])]
+    except Exception as e:  # noqa: BLE001
+        print(f"::warning::Websøk feilet: {e}")
+        return []
+
+
+def sok_etter_nettside(kand):
+    """Søker på navn + sted. Treff på et domene som inneholder navnet = egen nettside."""
+    ord_ = [w for w in re.findall(r"[a-z0-9]+", fold(kand["navn"])) if len(w) >= 4]
+    if not ord_:
+        return None
+    sted = kand.get("poststed") or "Bergen"
+    for url, tittel in nettsok(f'"{kand["navn"]}" {sted}'):
+        dom = urllib.parse.urlparse(url).netloc.lower().removeprefix("www.")
+        if not dom or KATALOGER.search(dom):
+            continue
+        if BOOKING.search(dom):
+            kand.setdefault("flagg", []).append(f"Har bookingside: {url}")
+            continue
+        dom_fold = re.sub(r"[^a-z0-9]", "", dom.split(".")[0])
+        if any(w in dom_fold for w in ord_) or (sum(1 for w in ord_ if w in fold(tittel)) >= min(2, len(ord_))
+                                                 and len(ord_) >= 2):
+            return dom
+    return None
+
+
 def finn_nettside(kand):
     """Returnerer domenet hvis bedriften ser ut til å ha en nettside, ellers None.
     Gjettede domener godtas bare hvis siden både nevner navnet OG har lokalt bevis
     (orgnr, telefonnummer, Bergen eller poststedet) – ellers flagges de for manuell sjekk."""
-    ord_ = [w for w in fold(kand["navn"]).split() if len(w) >= 4]
+    funnet = sok_etter_nettside(kand)
+    if funnet:
+        return funnet
+    ord_ = [w for w in re.findall(r"[a-z0-9]+", fold(kand["navn"])) if len(w) >= 4]
     trengs = min(2, len(ord_)) or 1
     epostdom = epostdomene(kand.get("epost", ""))
     tlf = re.sub(r"\D", "", kand.get("telefon") or "")[-8:]
