@@ -1,6 +1,7 @@
 """Premium-mal for frisører og skjønnhetssalonger: tre stilvarianter, bilder fra Pexels (valgfritt)."""
 import hashlib
 import html
+import re
 import urllib.parse
 
 E = html.escape
@@ -25,6 +26,46 @@ INNHOLD = {
         "cta": "Bestill time",
         "sok": ["hair salon interior", "hairdresser styling hair", "hair stylist cutting hair",
                 "hair color salon", "barber shop interior"],
+    },
+    "afro": {
+        "kicker": "Afro & barber i {sted}",
+        "tagline": ["It's all in your head."],
+        "ingress": "Fades, skjeggtrim, fletter og afrohår – hos folk som kan hårtypen din. Kom innom eller bestill time.",
+        "meny": [
+            ("Herreklipp / fade", "Maskin og saks, skarpe linjer", "fra 400"),
+            ("Skin fade", "Inkl. konturer og styling", "fra 450"),
+            ("Skjeggtrim", "Form, kontur og olje", "fra 250"),
+            ("Klipp + skjegg", "Hele pakka", "fra 600"),
+            ("Fletter / braids", "Etter lengde og stil", "fra 900"),
+            ("Barneklipp", "Til og med 12 år", "fra 300"),
+        ],
+        "om": "{navn} er en afro- og barbersalong i {sted}. Vi kan krøller, tekstur og afrohår – og vi tar oss tid til å få linjene helt rette.",
+        "verdier": [("Kan afrohår", "Tekstur, krøller og fletter er hverdagen vår."),
+                    ("Skarpe linjer", "Fades og konturer med presisjon."),
+                    ("Drop-in", "Kom innom – eller bestill time på telefon.")],
+        "cta": "Bestill time",
+        "sok": ["black barber haircut", "afro hair barbershop", "african braids hairstyle",
+                "fade haircut black man", "box braids hairstyle"],
+    },
+    "barber": {
+        "kicker": "Barbershop i {sted}",
+        "tagline": ["It's all in your head.", "Skarpe linjer, rolig stol", "Klipp og skjegg – gjort ordentlig"],
+        "ingress": "Herreklipp, fades og skjeggstell med god tid og skarpe linjer. Drop-in eller timebestilling.",
+        "meny": [
+            ("Herreklipp", "Maskin og saks", "fra 400"),
+            ("Fade", "Inkl. konturer", "fra 450"),
+            ("Skjeggtrim", "Form og kontur", "fra 250"),
+            ("Barbering med varmt håndkle", "Klassisk barbering", "fra 350"),
+            ("Klipp + skjegg", "Hele pakka", "fra 600"),
+            ("Barneklipp", "Til og med 12 år", "fra 300"),
+        ],
+        "om": "{navn} er en barbershop i {sted}. Vi holder det enkelt: god klipp, skarpe linjer og en stol du gleder deg til å sette deg i.",
+        "verdier": [("Skarpe linjer", "Fades og konturer med presisjon."),
+                    ("Skjeggstell", "Trim, form og varmt håndkle."),
+                    ("Drop-in", "Kom innom – eller ring og bestill.")],
+        "cta": "Bestill time",
+        "sok": ["barbershop interior", "barber cutting hair", "beard trim barber",
+                "fade haircut barber", "barber shop chair"],
     },
     "skjonnhet": {
         "kicker": "Hud- og skjønnhetspleie i {sted}",
@@ -56,15 +97,46 @@ VARIANTER = {
     "natt": ("#141211", "#1F1C1A", "#F3EDE4", "#A99F93", "#C8A46A", "#141211",
              "'Playfair Display', 'Didot', Georgia, serif",
              "Playfair+Display:ital,wght@0,500;0,700;1,500"),
+    "afro": ("#15100C", "#221913", "#F4E9DA", "#B9A58E", "#D98E32", "#15100C",
+             "'Bricolage Grotesque', 'Avenir Next', system-ui, sans-serif",
+             "Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800"),
+    "rose": ("#FBF3F1", "#F3E3E0", "#3A2629", "#8A6E70", "#B8667A", "#FFFFFF",
+             "'Cormorant Garamond', 'Iowan Old Style', Georgia, serif",
+             "Cormorant+Garamond:ital,wght@0,500;0,600;1,500"),
     "myk": ("#F6ECE6", "#EEDDD3", "#3B2A2A", "#806A66", "#B76E68", "#FFFFFF",
             "'Fraunces', 'Iowan Old Style', Georgia, serif",
             "Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400"),
 }
 
 
-def variant_for(orgnr):
-    navn = list(VARIANTER)
-    return navn[int(hashlib.sha1(orgnr.encode()).hexdigest(), 16) % len(navn)]
+LAYOUT = {"editorial": "editorial", "natt": "natt", "myk": "myk", "afro": "natt", "rose": "editorial"}
+
+AFRO = re.compile(r"afro|afri|braid|flett|\blocs\b|dread|kente|naija|habesha|eritre|somal|ethiop|ghana|nigeri|kongo|congo|senegal|kamerun", re.I)
+BARBER = re.compile(r"barb|\bcuts?\b|kutt|\bfade|shave|gentle|\bgents\b|herrefris|\bmen\b|\bmenn\b", re.I)
+
+
+def kategori(k):
+    if k["mal"] != "frisor":
+        return k["mal"]
+    if AFRO.search(k.get("registernavn") or k["navn"]):
+        return "afro"
+    if BARBER.search(k.get("registernavn") or k["navn"]):
+        return "barber"
+    return "frisor"
+
+
+def innhold_for(k):
+    return INNHOLD[kategori(k)]
+
+
+def variant_for(k):
+    kat = kategori(k)
+    if kat == "afro":
+        return "afro"
+    if kat == "barber":
+        return "natt"
+    h = int(hashlib.sha1(k["orgnr"].encode()).hexdigest(), 16)
+    return ("rose", "myk")[h % 2]  # lyst og feminint for vanlige frisører og skjønnhet
 
 
 def _bilde(b, klasse, plassholder_tekst, i):
@@ -75,8 +147,9 @@ def _bilde(b, klasse, plassholder_tekst, i):
 
 
 def demo(k, cfg):
-    inn = INNHOLD[k["mal"]]
-    vnavn = k.get("variant") or variant_for(k["orgnr"])
+    inn = innhold_for(k)
+    vnavn = k.get("variant") or variant_for(k)
+    layout = LAYOUT[vnavn]
     bg, flate, tekst, dempet, aksent, aksent_tekst, display, font_url = VARIANTER[vnavn]
     sted = k.get("poststed") or "Bergen"
     navn = k["navn"]
@@ -170,6 +243,17 @@ figure.tom.t2{{background:radial-gradient(90% 120% at 90% 90%,color-mix(in srgb,
 .v-myk .stripe figure{{aspect-ratio:1;border-radius:50%}}
 .v-myk .knapp{{border-radius:999px}}
 .v-myk .stripe figure.tom span{{inset:auto 0 46%;text-align:center}}
+/* --- variant: afro (mørk, varm, mønster) --- */
+.p-afro .monster{{height:40px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='40'%3E%3Cpath d='M0 30 L10 10 L20 30 L30 10 L40 30' stroke='%23D98E32' stroke-width='3' fill='none'/%3E%3Ccircle cx='55' cy='20' r='4' fill='%23B5482E'/%3E%3Ccircle cx='70' cy='20' r='4' fill='%23F4E9DA'/%3E%3Crect x='83' y='13' width='14' height='14' transform='rotate(45 90 20)' fill='none' stroke='%23D98E32' stroke-width='3'/%3E%3Cline x1='106' y1='8' x2='106' y2='32' stroke='%23F4E9DA' stroke-width='3'/%3E%3Cline x1='113' y1='8' x2='113' y2='32' stroke='%23B5482E' stroke-width='3'/%3E%3C/svg%3E") repeat-x center;border-top:1px solid #D98E3255;border-bottom:1px solid #D98E3255;opacity:.9}}
+.p-afro h1{{text-transform:uppercase;font-weight:800;letter-spacing:-.02em;font-size:clamp(48px,8vw,112px)}}
+.p-afro h2{{font-weight:800;letter-spacing:-.02em}}.p-afro h1 em,.p-afro h2 em{{font-style:normal;color:var(--aksent)}}
+.p-afro .kicker{{color:var(--aksent);font-weight:500}}.p-afro .knapp{{border-radius:2px;font-weight:500}}
+.p-afro .hero figure::after{{background:linear-gradient(180deg,rgba(21,16,12,.2),rgba(21,16,12,.95)),linear-gradient(90deg,rgba(181,72,46,.25),transparent 60%)}}
+.p-afro .meny li strong,.p-afro .verdi h3{{font-weight:700}}
+.p-afro .stripe figure{{border-bottom:4px solid var(--aksent)}}
+/* --- variant: rose (lys, feminin) --- */
+.p-rose h1{{font-style:italic;font-weight:500}}.p-rose .knapp{{border-radius:999px}}
+.p-rose .hero figure{{border-radius:220px 220px 6px 6px}}.p-rose .stripe figure:nth-child(2){{border-radius:999px 999px 0 0}}
 /* --- felles seksjoner --- */
 .meny{{display:grid;grid-template-columns:.8fr 1.2fr;gap:70px}}
 .meny ul{{list-style:none;padding:0}}
@@ -194,11 +278,12 @@ footer{{padding:34px 0;font-size:13px;color:var(--dempet)}}
  nav{{display:none}}.verdier{{grid-template-columns:1fr}}.v-natt .stripe{{grid-template-columns:1fr 1fr}}
  .v-natt .stripe figure:first-child{{grid-column:1/-1}}section{{padding:80px 0}}}}
 </style></head>
-<body class="v-{vnavn}">
+<body class="v-{layout} p-{vnavn}">
 <div class="demo">Forslag til nettside for {E(navn)}, laget av {E(selger['navn'])} – ikke bedriftens offisielle side.
 Interessert? <a href="tel:{E(selger['telefon'].replace(' ', ''))}">{E(selger['telefon'])}</a> · <a href="mailto:{E(selger['epost'])}">{E(selger['epost'])}</a></div>
-{'<div class="hero">' + _bilde(b[0], "", "Deres beste bilde her", 0) + '<div class="wrap" style="width:100%"><header><a class="logo" href="#"><span class="mono">' + E(init) + '</span>' + E(navn) + '</a><nav><a href="#meny">Priser</a><a href="#om">Om oss</a><a href="#kontakt">Kontakt</a></nav></header><div class="tekst"><span class="kicker">' + E(fyll(inn["kicker"])) + '</span><h1>' + E(tagline) + '</h1><p class="ingress">' + E(fyll(inn["ingress"])) + '</p><div class="handling"><a class="knapp" href="' + tlf_lenke + '">' + E(inn["cta"]) + '</a><a class="knapp strek" href="#meny">Se priser</a></div></div></div></div>' if vnavn == "natt" else
+{'<div class="hero">' + _bilde(b[0], "", "Deres beste bilde her", 0) + '<div class="wrap" style="width:100%"><header><a class="logo" href="#"><span class="mono">' + E(init) + '</span>' + E(navn) + '</a><nav><a href="#meny">Priser</a><a href="#om">Om oss</a><a href="#kontakt">Kontakt</a></nav></header><div class="tekst"><span class="kicker">' + E(fyll(inn["kicker"])) + '</span><h1>' + E(tagline) + '</h1><p class="ingress">' + E(fyll(inn["ingress"])) + '</p><div class="handling"><a class="knapp" href="' + tlf_lenke + '">' + E(inn["cta"]) + '</a><a class="knapp strek" href="#meny">Se priser</a></div></div></div></div>' if layout == "natt" else
 '<div class="wrap"><header><a class="logo" href="#"><span class="mono">' + E(init) + '</span>' + E(navn) + '</a><nav><a href="#meny">Priser</a><a href="#om">Om oss</a><a href="#kontakt">Kontakt</a></nav></header><div class="hero"><div><span class="kicker">' + E(fyll(inn["kicker"])) + '</span><h1>' + E(tagline) + '</h1><p class="ingress">' + E(fyll(inn["ingress"])) + '</p><div class="handling"><a class="knapp" href="' + tlf_lenke + '">' + E(inn["cta"]) + '</a><a class="knapp strek" href="#meny">Se priser</a></div></div>' + _bilde(b[0], "", "Deres beste bilde her", 0) + '</div></div>'}
+{'<div class="monster"></div>' if vnavn == "afro" else ''}
 <section class="flate"><div class="wrap stripe">{_bilde(b[1], "", "Bilde fra salongen", 1)}{_bilde(b[2], "", "Før / etter", 2)}{_bilde(b[3], "", "Teamet", 0)}</div></section>
 <section id="meny"><div class="wrap meny"><div><span class="kicker">Behandlinger</span><h2>Priser og <em>tjenester</em></h2>
 <p class="ingress">Alle priser er veiledende. Ta kontakt for et uforpliktende tilbud.</p>
@@ -211,5 +296,6 @@ Interessert? <a href="tel:{E(selger['telefon'].replace(' ', ''))}">{E(selger['te
 <section id="kontakt" class="flate"><div class="wrap kontakt"><div><span class="kicker">Kontakt</span><h2>Finn <em>oss</em></h2>{''.join(kontakt)}
 <p style="border:0;padding-top:28px"><a class="knapp" href="{tlf_lenke}">{E(inn['cta'])}</a></p></div>
 <div class="kart"><iframe loading="lazy" src="{E(kart)}" title="Kart"></iframe></div></div></section>
+{'<div class="monster"></div>' if vnavn == "afro" else ''}
 <footer class="wrap">© {E(navn)} · Org.nr. {E(k['orgnr'])}{kreditt_html}</footer>
 </body></html>"""

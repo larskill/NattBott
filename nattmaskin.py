@@ -307,9 +307,9 @@ def registrer_unsplash_bruk():
 
 def velg_bilder(kand, antall=5):
     """Fem ulike bilder per demo, valgt ut fra orgnr så samme bedrift alltid får de samme."""
-    inn = salong.INNHOLD.get(kand["mal"])
-    if not inn:
+    if kand["mal"] not in salong.INNHOLD:
         return []
+    inn = salong.innhold_for(kand)
     h = int(hashlib.sha1(kand["orgnr"].encode()).hexdigest(), 16)
     valgt = []
     for i in range(antall):
