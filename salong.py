@@ -24,8 +24,7 @@ INNHOLD = {
                     ("Skånsomme produkter", "Farger og pleie som tar vare på håret over tid."),
                     ("Lett å stelle", "Frisyrer som fungerer også når du gjør den selv.")],
         "cta": "Bestill time",
-        "sok": ["hairdresser scissors comb", "hair texture close up", "hair care products",
-                "hair brush detail", "salon tools flatlay"],
+        "sok": ["hairdresser scissors comb", "hair texture close up", "hair care products"],
     },
     "afro": {
         "kicker": "Afro & barber i {sted}",
@@ -44,8 +43,7 @@ INNHOLD = {
                     ("Skarpe linjer", "Fades og konturer med presisjon."),
                     ("Drop-in", "Kom innom – eller bestill time på telefon.")],
         "cta": "Bestill time",
-        "sok": ["afro comb pick", "barber clippers tools", "barber tools flatlay",
-                "hair oil bottle", "african pattern textile"],
+        "sok": ["afro comb pick", "barber clippers tools", "barber tools flatlay"],
     },
     "barber": {
         "kicker": "Barbershop i {sted}",
@@ -64,8 +62,7 @@ INNHOLD = {
                     ("Skjeggstell", "Trim, form og varmt håndkle."),
                     ("Drop-in", "Kom innom – eller ring og bestill.")],
         "cta": "Bestill time",
-        "sok": ["barber clippers tools", "straight razor shaving brush", "barber tools flatlay",
-                "beard oil bottle", "vintage barber pole"],
+        "sok": ["barber clippers tools", "straight razor shaving brush", "barber tools flatlay"],
     },
     "skjonnhet": {
         "kicker": "Hud- og skjønnhetspleie i {sted}",
@@ -84,8 +81,7 @@ INNHOLD = {
                     ("Kvalitetsprodukter", "Utvalgte merker vi kjenner godt og stoler på."),
                     ("Rolig atmosfære", "En time for deg selv, uten stress.")],
         "cta": "Bestill behandling",
-        "sok": ["skincare products flatlay", "nail polish bottles", "spa towels stones",
-                "cosmetics texture close up", "skincare serum bottle"],
+        "sok": ["skincare products flatlay", "nail polish bottles", "spa towels stones"],
     },
 }
 
@@ -286,11 +282,11 @@ Interessert? <a href="tel:{E(selger['telefon'].replace(' ', ''))}">{E(selger['te
 {'<div class="hero">' + _bilde(b[0], "", "Deres beste bilde her", 0) + '<div class="wrap" style="width:100%"><header><a class="logo" href="#"><span class="mono">' + E(init) + '</span>' + E(navn) + '</a><nav><a href="#meny">Priser</a><a href="#om">Om oss</a><a href="#kontakt">Kontakt</a></nav></header><div class="tekst"><span class="kicker">' + E(fyll(inn["kicker"])) + '</span><h1>' + E(tagline) + '</h1><p class="ingress">' + E(fyll(inn["ingress"])) + '</p><div class="handling"><a class="knapp" href="' + tlf_lenke + '">' + E(inn["cta"]) + '</a><a class="knapp strek" href="#meny">Se priser</a></div></div></div></div>' if layout == "natt" else
 '<div class="wrap"><header><a class="logo" href="#"><span class="mono">' + E(init) + '</span>' + E(navn) + '</a><nav><a href="#meny">Priser</a><a href="#om">Om oss</a><a href="#kontakt">Kontakt</a></nav></header><div class="hero"><div><span class="kicker">' + E(fyll(inn["kicker"])) + '</span><h1>' + E(tagline) + '</h1><p class="ingress">' + E(fyll(inn["ingress"])) + '</p><div class="handling"><a class="knapp" href="' + tlf_lenke + '">' + E(inn["cta"]) + '</a><a class="knapp strek" href="#meny">Se priser</a></div></div>' + _bilde(b[0], "", "Deres beste bilde her", 0) + '</div></div>'}
 {'<div class="monster"></div>' if vnavn == "afro" else ''}
-<section class="flate"><div class="wrap stripe">{_bilde(b[1], "", "Bilde fra salongen", 1)}{_bilde(b[2], "", "Før / etter", 2)}{_bilde(b[3], "", "Teamet", 0)}</div></section>
+<section class="flate"><div class="wrap stripe">{_bilde(b[1], "", "Deres bilde her", 1)}{_bilde(b[2], "", "Deres bilde her", 2)}{_bilde(b[3], "", "Deres bilde her", 0)}</div></section>
 <section id="meny"><div class="wrap meny"><div><span class="kicker">Behandlinger</span><h2>Priser og <em>tjenester</em></h2>
 <p class="ingress">Alle priser er veiledende. Ta kontakt for et uforpliktende tilbud.</p>
 <a class="knapp" href="{tlf_lenke}">{E(inn['cta'])}</a></div><div><ul>{meny}</ul><p class="merk">Eksempelpriser – byttes ut med salongens egne.</p></div></div></section>
-<section id="om" class="flate"><div class="wrap om">{_bilde(b[4], "", "Portrett av eier", 1)}<div><span class="kicker">Om oss</span><h2>Velkommen til <em>{E(navn)}</em></h2>
+<section id="om" class="flate"><div class="wrap om">{_bilde(b[4], "", "Deres bilde her", 1)}<div><span class="kicker">Om oss</span><h2>Velkommen til <em>{E(navn)}</em></h2>
 <p class="stor">{E(fyll(inn['om']))}</p><div class="verdier">{verdier}</div></div></div></section>
 <section class="insta"><div class="wrap"><span class="kicker">Instagram</span><h2>Følg oss for <em>inspirasjon</em></h2>
 <p>Her vises de siste innleggene fra salongens egen Instagram-konto – automatisk oppdatert.</p>

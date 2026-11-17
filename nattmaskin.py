@@ -244,6 +244,7 @@ def til_kandidat(e, b, poeng, grunner, flagg):
 
 _BILDE_CACHE = {}
 _UNSPLASH_NYE = []
+_BILDE_STOPP = []
 
 
 def _hent_json(url, headers):
@@ -255,6 +256,8 @@ def _hent_json(url, headers):
 def bilde_sok(sporring):
     if sporring in _BILDE_CACHE:
         return _BILDE_CACHE[sporring]
+    if _BILDE_STOPP:
+        return []
     fotos = []
     unsplash = os.environ.get("UNSPLASH_KEY", "").strip()
     pexels = os.environ.get("PEXELS_KEY", "").strip()
@@ -281,6 +284,9 @@ def bilde_sok(sporring):
                               "kilde_url": "https://www.pexels.com"})
     except Exception as e:  # noqa: BLE001
         print(f"::warning::Bildesøk feilet ({sporring}): {e}")
+        if "403" in str(e) or "429" in str(e):
+            _BILDE_STOPP.append(1)
+            print("::warning::Bildetjenesten sier stopp (grense per time) – resten bygges uten bilder.")
     _BILDE_CACHE[sporring] = fotos
     return fotos
 
@@ -294,7 +300,7 @@ def registrer_unsplash_bruk():
     brukt = set(les_json(sti, []))
     sendt = 0
     for f in _UNSPLASH_NYE:
-        if f["id"] in brukt or sendt >= 35:
+        if f["id"] in brukt or sendt >= 15:
             continue
         try:
             _hent_json(f["nedlasting"], {"Authorization": f"Client-ID {nokkel}", "Accept-Version": "v1"})
@@ -477,10 +483,14 @@ def domener_a_sjekke(k):
 
 
 def finn_nettside(kand):
-    """Returnerer domenet hvis bedriften ser ut til å ha en nettside, ellers None (og evt. flagg)."""
+    """Returnerer domenet hvis bedriften ser ut til å ha en nettside, ellers None.
+    Gjettede domener godtas bare hvis siden både nevner navnet OG har lokalt bevis
+    (orgnr, telefonnummer, Bergen eller poststedet) – ellers flagges de for manuell sjekk."""
     ord_ = [w for w in fold(kand["navn"]).split() if len(w) >= 4]
     trengs = min(2, len(ord_)) or 1
     epostdom = epostdomene(kand.get("epost", ""))
+    tlf = re.sub(r"\D", "", kand.get("telefon") or "")[-8:]
+    sted = fold(kand.get("poststed") or "")
     for dom in domener_a_sjekke(kand):
         html_ = None
         for url in (f"https://{dom}", f"https://www.{dom}", f"http://{dom}"):
@@ -491,8 +501,13 @@ def finn_nettside(kand):
             continue
         if PARKERING.search(html_) and len(html_) < 20000:
             continue
+        if dom == epostdom:
+            return dom
         tekst = fold(html_)
-        if dom == epostdom or sum(1 for w in ord_ if w in tekst) >= trengs:
+        sifre = re.sub(r"\D", "", html_)
+        lokalt = (("bergen" in tekst) or (sted and sted in tekst) or (kand.get("orgnr") and kand["orgnr"] in sifre)
+                  or (len(tlf) == 8 and tlf in sifre))
+        if lokalt and sum(1 for w in ord_ if w in tekst) >= trengs:
             return dom
         kand.setdefault("flagg", []).append(f"{dom} svarer – sjekk om det er deres side")
     return None
@@ -512,30 +527,37 @@ def kmd_nettsjekk(args, cfg):
 
 
 def kmd_sjekk_igjen(args, cfg):
-    """Sjekker eksisterende demoer på nytt; fjerner demoer for bedrifter som har nettside."""
+    """Sjekker dagens demoer på nytt: fjerner dem som har nettside, og gjenoppretter feilaktig fjernede."""
     import shutil
     sett = les_json(os.path.join(DATA, "sett.json"), {})
     dato = args.dato or dt.date.today().isoformat()
-    funnet = []
+    fjernet, gjenopprettet = [], []
     for onr, info in list(sett.items()):
-        if info.get("status") != "demo" or info.get("dato") != dato:
+        if info.get("dato") != dato or info.get("status") not in ("demo", "har_nettside"):
             continue
         try:
             e = api_get_enhet(onr)
         except Exception:  # noqa: BLE001
             continue
-        kand = {"navn": pent_navn(e.get("navn", "")), "epost": e.get("epostadresse") or ""}
+        adr = e.get("forretningsadresse") or {}
+        kand = {"navn": pent_navn(e.get("navn", "")), "epost": e.get("epostadresse") or "", "orgnr": onr,
+                "telefon": e.get("mobil") or e.get("telefon") or "", "poststed": adr.get("poststed", "")}
         dom = finn_nettside(kand)
-        if dom:
-            funnet.append((kand["navn"], dom))
-            mappe = os.path.join(DEMO_DIR, info.get("slug", ""))
-            if info.get("slug") and os.path.isdir(mappe):
-                shutil.rmtree(mappe)
-            sett[onr] = {"dato": dato, "status": "har_nettside", "grunn": dom}
+        if dom and info["status"] == "demo":
+            fjernet.append((kand["navn"], dom))
+            if info.get("slug") and os.path.isdir(os.path.join(DEMO_DIR, info["slug"])):
+                shutil.rmtree(os.path.join(DEMO_DIR, info["slug"]))
+            sett[onr] = {"dato": dato, "status": "har_nettside", "grunn": dom, "slug": info.get("slug")}
+        elif not dom and info["status"] == "har_nettside":
+            slug = info.get("slug") or slugify(kand["navn"])
+            sett[onr] = {"dato": dato, "status": "demo", "slug": slug}
+            gjenopprettet.append(kand["navn"])
     skriv_json(os.path.join(DATA, "sett.json"), sett)
-    for navn, dom in funnet:
+    for navn, dom in fjernet:
         print(f"Har nettside – demo fjernet: {navn} ({dom})")
-    print(f"Sjekket på nytt: {len(funnet)} hadde nettside")
+    for navn in gjenopprettet:
+        print(f"Gjenopprettet (fant ikke sikker nettside): {navn}")
+    print(f"Fjernet {len(fjernet)}, gjenopprettet {len(gjenopprettet)}")
 
 
 # ---------- morgenrapport på e-post ----------
