@@ -66,13 +66,13 @@
   },
   "936569633": {
     "dato": "2026-11-17",
-    "status": "har_nettside",
-    "grunn": "habibibarbershop.com"
+    "status": "demo",
+    "slug": "habibi-barber-shop"
   },
   "962328369": {
     "dato": "2026-11-17",
-    "status": "har_nettside",
-    "grunn": "frisor.no"
+    "status": "demo",
+    "slug": "in-si-frisor"
   },
   "937330332": {
     "dato": "2026-11-17",
@@ -156,8 +156,8 @@
   },
   "936570216": {
     "dato": "2026-11-17",
-    "status": "har_nettside",
-    "grunn": "altifix.com"
+    "status": "demo",
+    "slug": "altifix"
   },
   "935261627": {
     "dato": "2026-11-17",
@@ -176,18 +176,18 @@
   },
   "911559110": {
     "dato": "2026-11-17",
-    "status": "har_nettside",
-    "grunn": "robin-invest.com"
+    "status": "demo",
+    "slug": "robin-invest"
   },
   "912835251": {
     "dato": "2026-11-17",
-    "status": "har_nettside",
-    "grunn": "sunthar.com"
+    "status": "demo",
+    "slug": "sunt-har"
   },
   "929134621": {
     "dato": "2026-11-17",
-    "status": "har_nettside",
-    "grunn": "bergenkulde.no"
+    "status": "demo",
+    "slug": "bergen-kulde-og-varmepumpe"
   },
   "914800951": {
     "dato": "2026-11-17",
@@ -196,8 +196,8 @@
   },
   "929059476": {
     "dato": "2026-11-17",
-    "status": "har_nettside",
-    "grunn": "frosty.com"
+    "status": "demo",
+    "slug": "frosty"
   },
   "996414485": {
     "dato": "2026-11-17",
