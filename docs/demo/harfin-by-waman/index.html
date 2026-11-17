@@ -2,9 +2,9 @@
 <html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>Hårfin By Waman – Din faste stol i Flaktveit (forslag)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F6ECE6;--flate:#EEDDD3;--tekst:#3B2A2A;--dempet:#806A66;--aksent:#B76E68;--aksent-tekst:#FFFFFF;--display:'Fraunces', 'Iowan Old Style', Georgia, serif}
+:root{--bg:#FBF3F1;--flate:#F3E3E0;--tekst:#3A2629;--dempet:#8A6E70;--aksent:#B8667A;--aksent-tekst:#FFFFFF;--display:'Cormorant Garamond', 'Iowan Old Style', Georgia, serif}
 *{box-sizing:border-box;margin:0}html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--tekst);font:17px/1.65 'Jost',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:inherit}img{display:block;width:100%;height:100%;object-fit:cover}
@@ -53,6 +53,17 @@ figure.tom.t2{background:radial-gradient(90% 120% at 90% 90%,color-mix(in srgb,v
 .v-myk .stripe figure{aspect-ratio:1;border-radius:50%}
 .v-myk .knapp{border-radius:999px}
 .v-myk .stripe figure.tom span{inset:auto 0 46%;text-align:center}
+/* --- variant: afro (mørk, varm, mønster) --- */
+.p-afro .monster{height:40px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='40'%3E%3Cpath d='M0 30 L10 10 L20 30 L30 10 L40 30' stroke='%23D98E32' stroke-width='3' fill='none'/%3E%3Ccircle cx='55' cy='20' r='4' fill='%23B5482E'/%3E%3Ccircle cx='70' cy='20' r='4' fill='%23F4E9DA'/%3E%3Crect x='83' y='13' width='14' height='14' transform='rotate(45 90 20)' fill='none' stroke='%23D98E32' stroke-width='3'/%3E%3Cline x1='106' y1='8' x2='106' y2='32' stroke='%23F4E9DA' stroke-width='3'/%3E%3Cline x1='113' y1='8' x2='113' y2='32' stroke='%23B5482E' stroke-width='3'/%3E%3C/svg%3E") repeat-x center;border-top:1px solid #D98E3255;border-bottom:1px solid #D98E3255;opacity:.9}
+.p-afro h1{text-transform:uppercase;font-weight:800;letter-spacing:-.02em;font-size:clamp(48px,8vw,112px)}
+.p-afro h2{font-weight:800;letter-spacing:-.02em}.p-afro h1 em,.p-afro h2 em{font-style:normal;color:var(--aksent)}
+.p-afro .kicker{color:var(--aksent);font-weight:500}.p-afro .knapp{border-radius:2px;font-weight:500}
+.p-afro .hero figure::after{background:linear-gradient(180deg,rgba(21,16,12,.2),rgba(21,16,12,.95)),linear-gradient(90deg,rgba(181,72,46,.25),transparent 60%)}
+.p-afro .meny li strong,.p-afro .verdi h3{font-weight:700}
+.p-afro .stripe figure{border-bottom:4px solid var(--aksent)}
+/* --- variant: rose (lys, feminin) --- */
+.p-rose h1{font-style:italic;font-weight:500}.p-rose .knapp{border-radius:999px}
+.p-rose .hero figure{border-radius:220px 220px 6px 6px}.p-rose .stripe figure:nth-child(2){border-radius:999px 999px 0 0}
 /* --- felles seksjoner --- */
 .meny{display:grid;grid-template-columns:.8fr 1.2fr;gap:70px}
 .meny ul{list-style:none;padding:0}
@@ -77,10 +88,11 @@ footer{padding:34px 0;font-size:13px;color:var(--dempet)}
  nav{display:none}.verdier{grid-template-columns:1fr}.v-natt .stripe{grid-template-columns:1fr 1fr}
  .v-natt .stripe figure:first-child{grid-column:1/-1}section{padding:80px 0}}
 </style></head>
-<body class="v-myk">
+<body class="v-editorial p-rose">
 <div class="demo">Forslag til nettside for Hårfin By Waman, laget av Lars Killingberg – ikke bedriftens offisielle side.
 Interessert? <a href="tel:91567489">915 67 489</a> · <a href="mailto:killingberglars@gmail.com">killingberglars@gmail.com</a></div>
 <div class="wrap"><header><a class="logo" href="#"><span class="mono">HB</span>Hårfin By Waman</a><nav><a href="#meny">Priser</a><a href="#om">Om oss</a><a href="#kontakt">Kontakt</a></nav></header><div class="hero"><div><span class="kicker">Frisørsalong i Flaktveit</span><h1>Din faste stol i Flaktveit</h1><p class="ingress">Klipp, farge og styling med god tid og ærlige råd. Vi lager frisyrer som er like fine dag fem som dag én.</p><div class="handling"><a class="knapp" href="tel:+4792051294">Bestill time</a><a class="knapp strek" href="#meny">Se priser</a></div></div><figure class=""><img src="https://images.unsplash.com/photo-1787008547954-726e3e6db7e8?ixid=M3wxMTM3MTQ0fDB8MXxzZWFyY2h8MTh8fGJhcmJlciUyMHNob3AlMjBpbnRlcmlvcnxlbnwxfDF8fHwxNzk0OTQ5NzE2fDA&amp;ixlib=rb-4.1.0&amp;w=1400&amp;q=80&amp;fm=jpg&amp;fit=max" alt="A barber in a grey vest holding a hair clipper toward the camera" loading="lazy"></figure></div></div>
+
 <section class="flate"><div class="wrap stripe"><figure class=""><img src="https://images.unsplash.com/photo-1786057424913-6954b0f424af?ixid=M3wxMTM3MTQ0fDB8MXxzZWFyY2h8MTR8fGhhaXIlMjBzYWxvbiUyMGludGVyaW9yfGVufDF8MXx8fDE3OTQ5NDk3MTZ8MA&amp;ixlib=rb-4.1.0&amp;w=1400&amp;q=80&amp;fm=jpg&amp;fit=max" alt="A man cleans the modern barbershop floor" loading="lazy"></figure><figure class=""><img src="https://images.unsplash.com/photo-1659355751282-5ca7807af9e9?ixid=M3wxMTM3MTQ0fDB8MXxzZWFyY2h8MjV8fGhhaXJkcmVzc2VyJTIwc3R5bGluZyUyMGhhaXJ8ZW58MXwxfHx8MTc5NDk0OTcxNnww&amp;ixlib=rb-4.1.0&amp;w=1400&amp;q=80&amp;fm=jpg&amp;fit=max" alt="a man cutting another man&#x27;s hair" loading="lazy"></figure><figure class=""><img src="https://images.unsplash.com/photo-1605497787865-e6d4762b386f?ixid=M3wxMTM3MTQ0fDB8MXxzZWFyY2h8Nnx8aGFpciUyMHN0eWxpc3QlMjBjdXR0aW5nJTIwaGFpcnxlbnwxfDF8fHwxNzk0OTQ5NzE3fDA&amp;ixlib=rb-4.1.0&amp;w=1400&amp;q=80&amp;fm=jpg&amp;fit=max" alt="man in black shirt holding black dslr camera" loading="lazy"></figure></div></section>
 <section id="meny"><div class="wrap meny"><div><span class="kicker">Behandlinger</span><h2>Priser og <em>tjenester</em></h2>
 <p class="ingress">Alle priser er veiledende. Ta kontakt for et uforpliktende tilbud.</p>
@@ -93,5 +105,6 @@ Interessert? <a href="tel:91567489">915 67 489</a> · <a href="mailto:killingber
 <section id="kontakt" class="flate"><div class="wrap kontakt"><div><span class="kicker">Kontakt</span><h2>Finn <em>oss</em></h2><p><span>Telefon</span><a href="tel:+4792051294">920 51 294</a></p><p><span>Adresse</span>Ulvedalen 5, 5134 Flaktveit</p><p><span>Åpningstider</span>Tir–fre 10–18 · Lør 10–15 <em>(eksempel)</em></p>
 <p style="border:0;padding-top:28px"><a class="knapp" href="tel:+4792051294">Bestill time</a></p></div>
 <div class="kart"><iframe loading="lazy" src="https://www.google.com/maps?output=embed&amp;q=Ulvedalen%205%2C%205134%20Flaktveit" title="Kart"></iframe></div></div></section>
+
 <footer class="wrap">© Hårfin By Waman · Org.nr. 935150930 · Eksempelbilder av <a href="https://unsplash.com/@firephotos?utm_source=nattbott&amp;utm_medium=referral">🔥John Rodriguez🔥</a>, <a href="https://unsplash.com/@brunobd?utm_source=nattbott&amp;utm_medium=referral">Bruno BD</a>, <a href="https://unsplash.com/@fotospk?utm_source=nattbott&amp;utm_medium=referral">Fotos</a>, <a href="https://unsplash.com/@delfipan?utm_source=nattbott&amp;utm_medium=referral">delfina pan</a>, <a href="https://unsplash.com/@agusprasetyow?utm_source=nattbott&amp;utm_medium=referral">Dwi Agus Prasetiyo</a> på <a href="https://unsplash.com/?utm_source=nattbott&amp;utm_medium=referral">Unsplash</a></footer>
 </body></html>
