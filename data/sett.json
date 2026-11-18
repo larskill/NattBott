@@ -41,8 +41,9 @@
   },
   "938029865": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "piano-med-jordan-wett"
+    "status": "utelatt",
+    "slug": "piano-med-jordan-wett",
+    "grunn": "kun telefon"
   },
   "935413060": {
     "dato": "2026-11-17",
@@ -80,13 +81,15 @@
   },
   "937330332": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "kostetskyi-vadym"
+    "status": "utelatt",
+    "slug": "kostetskyi-vadym",
+    "grunn": "kun telefon"
   },
   "937676565": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "kristine-aristova-nordhus-frisor"
+    "status": "utelatt",
+    "slug": "kristine-aristova-nordhus-frisor",
+    "grunn": "kun telefon"
   },
   "936010644": {
     "dato": "2026-11-17",
@@ -107,18 +110,21 @@
   },
   "937077084": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "pro-service-eikeland"
+    "status": "utelatt",
+    "slug": "pro-service-eikeland",
+    "grunn": "kun telefon"
   },
   "938613893": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "al-gharrawi-service"
+    "status": "utelatt",
+    "slug": "al-gharrawi-service",
+    "grunn": "kun telefon"
   },
   "938107408": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "alexandru-roman-bygg"
+    "status": "utelatt",
+    "slug": "alexandru-roman-bygg",
+    "grunn": "kun telefon"
   },
   "967695971": {
     "dato": "2026-11-17",
@@ -127,8 +133,9 @@
   },
   "937705735": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "malermaster-kordas"
+    "status": "utelatt",
+    "slug": "malermaster-kordas",
+    "grunn": "kun telefon"
   },
   "998002249": {
     "dato": "2026-11-17",
@@ -253,8 +260,9 @@
   },
   "936153518": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "fredrik-ertvaag-musikk"
+    "status": "utelatt",
+    "slug": "fredrik-ertvaag-musikk",
+    "grunn": "kun telefon"
   },
   "818874502": {
     "dato": "2026-11-17",
@@ -263,8 +271,9 @@
   },
   "934748107": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "alpha-t-chaieb"
+    "status": "utelatt",
+    "slug": "alpha-t-chaieb",
+    "grunn": "kun telefon"
   },
   "986564136": {
     "dato": "2026-11-17",
@@ -313,38 +322,45 @@
   },
   "932801698": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "estetique-beauty-by-thea-samuelsen"
+    "status": "utelatt",
+    "slug": "estetique-beauty-by-thea-samuelsen",
+    "grunn": "kun telefon"
   },
   "976854039": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "et-harstudio-sletten"
+    "status": "utelatt",
+    "slug": "et-harstudio-sletten",
+    "grunn": "kun telefon"
   },
   "957906796": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "et-harstudio-asane"
+    "status": "utelatt",
+    "slug": "et-harstudio-asane",
+    "grunn": "kun telefon"
   },
   "834167042": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "everglow-hair-hansen"
+    "status": "utelatt",
+    "slug": "everglow-hair-hansen",
+    "grunn": "kun telefon"
   },
   "933069540": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "fesenko-frisor-dsa"
+    "status": "utelatt",
+    "slug": "fesenko-frisor-dsa",
+    "grunn": "kun telefon"
   },
   "935150930": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "harfin-by-waman"
+    "status": "utelatt",
+    "slug": "harfin-by-waman",
+    "grunn": "kun telefon"
   },
   "935602971": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "ina-coucheron"
+    "status": "utelatt",
+    "slug": "ina-coucheron",
+    "grunn": "kun telefon"
   },
   "916754221": {
     "dato": "2026-11-17",
@@ -353,63 +369,75 @@
   },
   "988742341": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "m-e-frisordrift"
+    "status": "utelatt",
+    "slug": "m-e-frisordrift",
+    "grunn": "kun telefon"
   },
   "984881657": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "rotter-av-e-t"
+    "status": "utelatt",
+    "slug": "rotter-av-e-t",
+    "grunn": "kun telefon"
   },
   "935151201": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "susana-carrillo-vasconcelos"
+    "status": "utelatt",
+    "slug": "susana-carrillo-vasconcelos",
+    "grunn": "kun telefon"
   },
   "931733125": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "think-hair-wear-galleriet"
+    "status": "utelatt",
+    "slug": "think-hair-wear-galleriet",
+    "grunn": "kun telefon"
   },
   "996360555": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "tobar-2"
+    "status": "utelatt",
+    "slug": "tobar-2",
+    "grunn": "kun telefon"
   },
   "992840277": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "trond-s-frisor-team"
+    "status": "utelatt",
+    "slug": "trond-s-frisor-team",
+    "grunn": "kun telefon"
   },
   "911837722": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "123kulde"
+    "status": "utelatt",
+    "slug": "123kulde",
+    "grunn": "kun telefon"
   },
   "954623718": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "b-fondenes-aut-rorleggerfirma"
+    "status": "utelatt",
+    "slug": "b-fondenes-aut-rorleggerfirma",
+    "grunn": "kun telefon"
   },
   "934268598": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "laksevag-ror-sanitaer"
+    "status": "utelatt",
+    "slug": "laksevag-ror-sanitaer",
+    "grunn": "kun telefon"
   },
   "985820872": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "truls-petter-rorleggerservice"
+    "status": "utelatt",
+    "slug": "truls-petter-rorleggerservice",
+    "grunn": "kun telefon"
   },
   "964377111": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "o-antonsen"
+    "status": "utelatt",
+    "slug": "o-antonsen",
+    "grunn": "kun telefon"
   },
   "982743834": {
     "dato": "2026-11-17",
-    "status": "demo",
-    "slug": "bergen-elektro-automasjon"
+    "status": "utelatt",
+    "slug": "bergen-elektro-automasjon",
+    "grunn": "kun telefon"
   },
   "980184501": {
     "dato": "2026-11-18",
@@ -533,53 +561,63 @@
   },
   "932855801": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "bibi-svobodnikova"
+    "status": "utelatt",
+    "slug": "bibi-svobodnikova",
+    "grunn": "kun telefon"
   },
   "954618188": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "anne-s-hudpleie-spa-anne-naglestad-sangolt"
+    "status": "utelatt",
+    "slug": "anne-s-hudpleie-spa-anne-naglestad-sangolt",
+    "grunn": "kun telefon"
   },
   "935136938": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "biriukova-t-nails"
+    "status": "utelatt",
+    "slug": "biriukova-t-nails",
+    "grunn": "kun telefon"
   },
   "933016870": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "bjanesoy-agent-for-mary-kay-hudpleie-og-kosmetikk-uten-fast-"
+    "status": "utelatt",
+    "slug": "bjanesoy-agent-for-mary-kay-hudpleie-og-kosmetikk-uten-fast-",
+    "grunn": "kun telefon"
   },
   "983976476": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "kilden-hud-og-kroppspleie"
+    "status": "utelatt",
+    "slug": "kilden-hud-og-kroppspleie",
+    "grunn": "kun telefon"
   },
   "964236917": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "kjerstis-hudpleiesalong"
+    "status": "utelatt",
+    "slug": "kjerstis-hudpleiesalong",
+    "grunn": "kun telefon"
   },
   "934326199": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "my-dream-nails-lebedenko-myroslava"
+    "status": "utelatt",
+    "slug": "my-dream-nails-lebedenko-myroslava",
+    "grunn": "kun telefon"
   },
   "934774183": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "nails-yevstafieva-couture"
+    "status": "utelatt",
+    "slug": "nails-yevstafieva-couture",
+    "grunn": "kun telefon"
   },
   "966955767": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "studio-harfin"
+    "status": "utelatt",
+    "slug": "studio-harfin",
+    "grunn": "kun telefon"
   },
   "985402698": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "fana-elektrikeren"
+    "status": "utelatt",
+    "slug": "fana-elektrikeren",
+    "grunn": "kun telefon"
   },
   "927785862": {
     "dato": "2026-11-18",
@@ -594,49 +632,51 @@
   },
   "936004571": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "thels"
+    "status": "utelatt",
+    "slug": "thels",
+    "grunn": "kun telefon"
   },
   "917027781": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "urheims-elektrokompani"
+    "status": "utelatt",
+    "slug": "urheims-elektrokompani",
+    "grunn": "kun telefon"
   },
   "913464397": {
     "dato": "2026-11-18",
-    "status": "demo",
+    "status": "utelatt",
     "slug": "egil-knudsen",
-    "type": "oppgradering",
-    "nettside": "egilknudsen.no",
-    "problemer": [
-      "Bygget med utdatert teknologi (gammel WordPress)",
-      "Mangler beskrivelse for Google-søk"
-    ]
+    "grunn": "kun telefon"
   },
   "967560545": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "glassmester-kaare-nilsen"
+    "status": "utelatt",
+    "slug": "glassmester-kaare-nilsen",
+    "grunn": "kun telefon"
   },
   "997903110": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "hysa-malerfirma"
+    "status": "utelatt",
+    "slug": "hysa-malerfirma",
+    "grunn": "kun telefon"
   },
   "936233317": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "lars-holmaas-as-malerforretning"
+    "status": "utelatt",
+    "slug": "lars-holmaas-as-malerforretning",
+    "grunn": "kun telefon"
   },
   "960217365": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "malermester-jan-o-larsen"
+    "status": "utelatt",
+    "slug": "malermester-jan-o-larsen",
+    "grunn": "kun telefon"
   },
   "997882989": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "malermester-torgersen"
+    "status": "utelatt",
+    "slug": "malermester-torgersen",
+    "grunn": "kun telefon"
   },
   "928805271": {
     "dato": "2026-11-18",
@@ -666,20 +706,15 @@
   },
   "934440617": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "beauty-by-andersen"
+    "status": "utelatt",
+    "slug": "beauty-by-andersen",
+    "grunn": "kun telefon"
   },
   "894482532": {
     "dato": "2026-11-18",
-    "status": "demo",
+    "status": "utelatt",
     "slug": "malermester-buer-bergen",
-    "type": "oppgradering",
-    "nettside": "buergruppen.no",
-    "problemer": [
-      "Mangler sikker tilkobling (nettlesere viser «Ikke sikker»)",
-      "Ikke tilpasset mobil",
-      "Mangler beskrivelse for Google-søk"
-    ]
+    "grunn": "kun telefon"
   },
   "998727766": {
     "dato": "2026-11-18",

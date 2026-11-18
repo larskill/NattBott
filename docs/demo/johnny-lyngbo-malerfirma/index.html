@@ -1,64 +1,106 @@
 <!doctype html>
 <html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex,nofollow">
-<title>Johnny Lyngbø Malerfirma – Farger som tåler Bergensværet (forslag)</title>
+<meta name="robots" content="noindex,nofollow"><title>Johnny Lyngbø Malerfirma – Rene linjer, inne og ute (forslag)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,500;75..125,800&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F5F1EA;--blekk:#26323B;--aksent:#C2533A;--aksent-tekst:#FFFFFF;--display:'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;}
-*{box-sizing:border-box;margin:0}
-body{background:var(--bg);color:var(--blekk);font:17px/1.6 'Source Sans 3',system-ui,sans-serif}
-a{color:inherit}
-.demo{background:var(--blekk);color:var(--bg);font-size:14px;padding:10px 20px;text-align:center}
-.demo a{color:var(--bg);font-weight:600}
-.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
-header{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
-.logo{display:flex;align-items:center;gap:12px;font-family:var(--display);font-weight:700;font-size:20px;text-decoration:none}
-.merke{width:42px;height:42px;border-radius:50%;background:var(--aksent);color:var(--aksent-tekst);display:grid;place-items:center;font-size:16px;letter-spacing:.5px}
-nav a{margin-left:26px;text-decoration:none;font-weight:600;font-size:15px;opacity:.8}
-nav a:hover{opacity:1}
-.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;padding:56px 0 72px}
-h1{font-family:var(--display);font-size:clamp(38px,5.4vw,66px);line-height:1.04;letter-spacing:-.02em}
-.ingress{font-size:20px;margin:22px 0 32px;max-width:34ch;opacity:.85}
-.knapp{display:inline-block;background:var(--aksent);color:var(--aksent-tekst);padding:15px 26px;border-radius:999px;font-weight:600;text-decoration:none;transition:transform .15s}
-.knapp:hover{transform:translateY(-2px)}
-.knapp.lys{background:transparent;color:var(--blekk);border:2px solid var(--blekk);margin-left:10px}
-.motiv svg{width:100%;height:auto}
-.usp{display:flex;flex-wrap:wrap;gap:12px;list-style:none;padding:0;margin-top:34px}
-.usp li{border:1.5px solid color-mix(in srgb,var(--blekk) 25%,transparent);border-radius:999px;padding:6px 14px;font-size:14px;font-weight:600}
-section{padding:80px 0}
-h2{font-family:var(--display);font-size:clamp(30px,3.6vw,44px);letter-spacing:-.01em;margin-bottom:36px}
-.tjenester{background:color-mix(in srgb,var(--blekk) 5%,var(--bg))}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-.kort{background:var(--bg);border-radius:18px;padding:28px;border:1px solid color-mix(in srgb,var(--blekk) 10%,transparent)}
-.kort .nr{font-family:var(--display);color:var(--aksent);font-weight:700;font-size:15px}
-.kort h3{font-family:var(--display);font-size:22px;margin:10px 0 8px}
-.kort p{font-size:16px;opacity:.8}
-.om{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
-.om h2{line-height:1.15}.om p{font-size:20px}
-.kontakt{background:var(--blekk);color:var(--bg)}
-.kontakt .rad{display:grid;grid-template-columns:1fr 1fr;gap:48px}
-.kontakt p{display:flex;flex-direction:column;padding:14px 0;border-bottom:1px solid color-mix(in srgb,var(--bg) 20%,transparent);font-size:19px}
-.kontakt p span{font-size:13px;text-transform:uppercase;letter-spacing:.1em;opacity:.6}
-.kontakt .knapp{margin-top:8px}
-footer{padding:28px 0;font-size:14px;opacity:.7}
-@media(max-width:860px){.hero,.om,.kontakt .rad{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}nav{display:none}.motiv{max-width:360px}}
-@media(max-width:520px){.grid{grid-template-columns:1fr}.knapp.lys{margin:12px 0 0}}
+:root{--bg:#F7F4EF;--flate:#ECE5DB;--tekst:#22303A;--dempet:#66717A;--aksent:#D2553A;--aksent-tekst:#FFFFFF;
+--linje:color-mix(in srgb,var(--tekst) 13%,transparent);--display:'Archivo','Helvetica Neue',Arial,sans-serif}
+*{box-sizing:border-box;margin:0}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tekst);font:17px/1.6 'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}img{display:block;width:100%;height:100%;object-fit:cover}
+.demo{background:var(--tekst);color:var(--bg);font-size:13px;padding:9px 20px;text-align:center}.demo a{color:var(--bg);font-weight:600}
+.wrap{max-width:1200px;margin:0 auto;padding:0 28px}
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--linje)}
+.hdr{display:flex;align-items:center;justify-content:space-between;height:74px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;font-family:var(--display);font-weight:800;font-stretch:90%;font-size:21px;letter-spacing:-.01em}
+.mono{width:40px;height:40px;border-radius:10px;background:var(--aksent);color:var(--aksent-tekst);display:grid;place-items:center;font-size:15px}
+nav{display:flex;align-items:center;gap:28px}nav a{text-decoration:none;font-weight:500;font-size:15px;color:var(--dempet)}nav a:hover{color:var(--tekst)}
+.knapp{display:inline-flex;align-items:center;gap:10px;background:var(--aksent);color:var(--aksent-tekst);text-decoration:none;font-weight:600;
+ padding:15px 24px;border-radius:12px;border:0;cursor:pointer;font:600 16px 'Inter Tight',sans-serif;transition:transform .15s,box-shadow .15s}
+.knapp:hover{transform:translateY(-2px);box-shadow:0 10px 24px -10px var(--aksent)}
+.knapp.lys{background:transparent;color:var(--tekst);border:1.5px solid var(--linje)}
+nav .knapp{padding:11px 18px;font-size:15px;color:var(--aksent-tekst);white-space:nowrap}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;padding-top:72px;padding-bottom:84px}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--aksent)}
+.kicker::before{content:"";width:28px;height:3px;background:var(--aksent);border-radius:2px}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.02em}
+h1{font-weight:800;font-stretch:85%;font-size:clamp(46px,6.6vw,92px);line-height:.95;margin:18px 0 22px;text-wrap:balance}
+h2{font-weight:800;font-stretch:88%;font-size:clamp(34px,4.4vw,58px);line-height:1;margin:12px 0 18px;text-wrap:balance}
+.ingress{font-size:19px;color:var(--dempet);max-width:40ch;margin-bottom:30px}
+.handling{display:flex;gap:12px;flex-wrap:wrap}
+.tillit{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:30px;font-size:15px;font-weight:500}
+.tillit li{display:flex;align-items:center;gap:8px}.tillit svg{color:var(--aksent)}
+.collage{position:relative;height:560px}
+.collage figure{position:absolute;overflow:hidden;border-radius:22px;background:var(--flate)}
+.collage .a{inset:0 18% 12% 0}.collage .a .eks{bottom:auto;top:12px;right:auto;left:12px}.collage .b{width:44%;height:46%;right:0;bottom:0;border:6px solid var(--bg)}
+.merke{position:absolute;left:-18px;bottom:40px;z-index:3;background:var(--bg);border:1px solid var(--linje);border-radius:16px;padding:14px 18px;
+ box-shadow:0 20px 40px -20px rgba(0,0,0,.35);display:flex;gap:12px;align-items:center;font-size:14px}
+.merke b{display:block;font-family:var(--display);font-size:20px}.merke .ik{color:var(--aksent)}
+figure{position:relative;overflow:hidden}figure.tom{background:repeating-linear-gradient(135deg,var(--flate) 0 14px,color-mix(in srgb,var(--flate) 70%,var(--bg)) 14px 28px)}
+figure.tom span{position:absolute;left:16px;bottom:14px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dempet)}
+.eks{position:absolute;right:10px;bottom:10px;z-index:2;font-size:10px;letter-spacing:.14em;text-transform:uppercase;background:rgba(0,0,0,.5);color:#fff;padding:3px 8px;border-radius:4px}
+.band{background:var(--aksent);color:var(--aksent-tekst);overflow:hidden;white-space:nowrap;padding:18px 0;font-family:var(--display);font-weight:800;font-stretch:85%;font-size:26px;text-transform:uppercase;letter-spacing:.01em}
+.band div{display:inline-flex;gap:28px;animation:gli 38s linear infinite}.band i{font-style:normal;opacity:.6}
+@keyframes gli{to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.band div{animation:none}}
+section{padding:104px 0}.flate{background:var(--flate)}
+.topp{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-bottom:44px;flex-wrap:wrap}.topp p{max-width:44ch;color:var(--dempet)}
+.tjgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.tj{background:var(--bg);border:1px solid var(--linje);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:10px;transition:transform .2s,border-color .2s}
+.tj:hover{transform:translateY(-4px);border-color:var(--aksent)}
+.tj .ik{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--aksent) 14%,transparent);color:var(--aksent);margin-bottom:8px}
+.tj h3{font-size:22px;font-weight:800;font-stretch:90%}.tj p{font-size:15px;color:var(--dempet);flex:1}.tj a{font-weight:600;font-size:15px;text-decoration:none;color:var(--aksent)}
+.prosess{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--linje)}
+.steg{padding:34px 30px 10px 0}.steg+.steg{padding-left:30px;border-left:1px solid var(--linje)}
+.steg b{font-family:var(--display);font-size:56px;font-weight:800;font-stretch:80%;color:var(--aksent);line-height:1}.steg h3{font-size:24px;margin:14px 0 8px}.steg p{color:var(--dempet)}
+.galleri{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px;height:440px}.galleri figure{border-radius:20px;background:var(--flate)}
+.omrade{display:grid;grid-template-columns:1fr 1.1fr;gap:56px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.chips span{border:1px solid var(--linje);border-radius:999px;padding:8px 16px;font-size:15px;font-weight:500;background:var(--bg)}
+.kart{border-radius:22px;overflow:hidden;min-height:400px;border:1px solid var(--linje);background:var(--bg)}.kart iframe{width:100%;height:100%;min-height:400px;border:0;filter:saturate(.75)}
+.tilbud{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+.tilbud .kontakt p{display:flex;flex-direction:column;padding:14px 0;border-bottom:1px solid var(--linje);font-size:18px}
+.tilbud .kontakt span{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--dempet)}
+form{background:var(--bg);border:1px solid var(--linje);border-radius:22px;padding:30px;display:grid;gap:14px}
+label{display:grid;gap:6px;font-size:14px;font-weight:500;color:var(--dempet)}
+input,textarea{font:inherit;color:var(--tekst);background:var(--flate);border:1px solid var(--linje);border-radius:12px;padding:13px 14px}
+input:focus,textarea:focus{outline:2px solid var(--aksent);outline-offset:1px}textarea{min-height:110px;resize:vertical}
+form small{color:var(--dempet);font-size:13px}
+footer{padding:34px 0;font-size:13px;color:var(--dempet);border-top:1px solid var(--linje)}
+.mobilring{display:none}
+@media(max-width:960px){.hero,.omrade,.tilbud{grid-template-columns:1fr;gap:40px}.tjgrid{grid-template-columns:1fr 1fr}
+ .prosess{grid-template-columns:1fr}.steg+.steg{padding-left:0;border-left:0;border-top:1px solid var(--linje)}
+ nav a:not(.knapp){display:none}.collage{height:420px}.galleri{grid-template-columns:1fr 1fr;height:auto}.galleri figure{height:220px}
+ .galleri figure:first-child{grid-column:1/-1}section{padding:76px 0}
+ .mobilring{display:flex;position:fixed;left:16px;right:16px;bottom:16px;z-index:30;justify-content:center}}
+@media(max-width:560px){.tjgrid{grid-template-columns:1fr}.merke{left:8px}.logo{font-size:17px}.wrap{padding-left:20px;padding-right:20px}}
 </style></head>
-<body>
-<div class="demo">Dette er et <strong>forslag</strong> til nettside for Johnny Lyngbø Malerfirma, laget av Lars Killingberg – ikke bedriftens offisielle side.
+<body class="lys">
+<div class="demo">Forslag til nettside for Johnny Lyngbø Malerfirma, laget av Lars Killingberg – ikke bedriftens offisielle side.
 Interessert? <a href="tel:91567489">915 67 489</a> · <a href="mailto:killingberglars@gmail.com">killingberglars@gmail.com</a></div>
-<div class="wrap">
-<header><a class="logo" href="#"><span class="merke">JL</span>Johnny Lyngbø Malerfirma</a>
-<nav><a href="#tjenester">Tjenester</a><a href="#om">Om oss</a><a href="#kontakt">Kontakt</a></nav></header>
-<div class="hero"><div><h1>Farger som tåler Bergensværet</h1><p class="ingress">Maling innvendig og utvendig i Rådal. Grundig forarbeid gir et resultat som varer.</p>
-<a class="knapp" href="tel:+4795223592">Bestill befaring · 952 23 592</a><a class="knapp lys" href="#tjenester">Se tjenester</a><ul class="usp"><li>Inne og ute</li><li>Grundig forarbeid</li><li>Gratis befaring</li></ul></div>
-<div class="motiv"><svg viewBox="0 0 400 300" aria-hidden="true"><g fill="none" stroke="#26323B" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
-<path d="M60 150 L200 40 L340 150"/><path d="M90 130 V260 H310 V130"/><rect x="170" y="180" width="60" height="80"/></g>
-<rect x="115" y="160" width="40" height="40" fill="#C2533A"/><rect x="245" y="160" width="40" height="40" fill="#C2533A"/>
-<path d="M270 80 V40 h30 v62" fill="none" stroke="#26323B" stroke-width="10" stroke-linejoin="round"/></svg></div></div></div>
-<section class="tjenester" id="tjenester"><div class="wrap"><h2>Dette hjelper vi deg med</h2><div class="grid"><article class="kort"><span class="nr">01</span><h3>Utvendig maling</h3><p>Vask, skraping og maling av kledning, vinduer og gjerder – med produkter for vestlandsklima.</p></article><article class="kort"><span class="nr">02</span><h3>Innvendig maling</h3><p>Vegger, tak og listverk med rene linjer og skjermet møblement.</p></article><article class="kort"><span class="nr">03</span><h3>Tapetsering</h3><p>Fra fototapet til klassisk mønster, satt opp med presisjon.</p></article><article class="kort"><span class="nr">04</span><h3>Sparkling</h3><p>Jevne flater før maling – det er her kvaliteten avgjøres.</p></article></div></div></section>
-<section id="om"><div class="wrap om"><h2>Om Johnny Lyngbø Malerfirma</h2><p>Johnny Lyngbø Malerfirma er malerbedrift i Rådal. Vi gir deg en tydelig pris etter befaring og holder avtalt tidsplan.</p></div></section>
-<section class="kontakt" id="kontakt"><div class="wrap rad"><div><h2>Ta kontakt</h2><a class="knapp" href="tel:+4795223592">Bestill befaring · 952 23 592</a></div><div><p><span>Telefon</span><a href="tel:+4795223592">952 23 592</a></p><p><span>E-post</span><a href="mailto:j-lyngbo@online.no">j-lyngbo@online.no</a></p><p><span>Adresse</span><a href="https://www.google.com/maps/search/?api=1&amp;query=Johnny%20Lyngb%C3%B8%20Malerfirma%2C%20S%C3%A6tervegen%2037%2C%205236%20R%C3%A5dal" target="_blank" rel="noopener">Sætervegen 37, 5236 Rådal</a></p><p><span>Åpningstider</span>Man–fre 08–16 <em>(eksempel – fylles inn)</em></p></div></div></section>
-<footer class="wrap">© Johnny Lyngbø Malerfirma · Org.nr. 991442154</footer>
+<header><div class="wrap hdr"><a class="logo" href="#"><span class="mono">JL</span>Johnny Lyngbø Malerfirma</a>
+<nav><a href="#tjenester">Tjenester</a><a href="#slik">Slik jobber vi</a><a href="#omrade">Område</a><a class="knapp" href="#tilbud">Få tilbud</a></nav></div></header>
+<div class="wrap hero"><div><span class="kicker">Maler i Rådal</span><h1>Rene linjer, inne og ute</h1>
+<p class="ingress">Utvendig maling som holder i vestlandsklima, og innvendig arbeid med presise kanter. Vi skjermer, sparkler og rydder.</p>
+<div class="handling"><a class="knapp" href="#tilbud">Få gratis tilbud</a><a class="knapp lys" href="tel:+4795223592">Ring 952 23 592</a></div>
+<ul class="tillit"><li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4L19 6"/></svg>Gratis befaring</li><li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4L19 6"/></svg>Fast pris etter befaring</li><li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4L19 6"/></svg>Grundig forarbeid</li></ul></div>
+<div class="collage"><figure class="a"><img src="https://images.unsplash.com/photo-1613666587344-f3c08aac2594?ixid=M3wxMTM3MTQ0fDB8MXxzZWFyY2h8MTF8fHBhaW50JTIwYnJ1c2hlcyUyMGNhbnN8ZW58MXwxfHx8MTc5NTAyODk4MXww&amp;ixlib=rb-4.1.0&amp;w=1400&amp;q=80&amp;fm=jpg&amp;fit=max" alt="brown wooden brush in clear glass jar" loading="lazy"><small class="eks">Eksempelbilde</small></figure><figure class="b"><img src="https://images.unsplash.com/photo-1780535394131-23205888ef2e?ixid=M3wxMTM3MTQ0fDB8MXxzZWFyY2h8MjJ8fHBhaW50JTIwY29sb3IlMjBzd2F0Y2hlc3xlbnwxfDF8fHwxNzk1MDI4OTgxfDA&amp;ixlib=rb-4.1.0&amp;w=1400&amp;q=80&amp;fm=jpg&amp;fit=max" alt="Pantone 19-3935 deep cobalt color swatch with purple gradient" loading="lazy"><small class="eks">Eksempelbilde</small></figure>
+<div class="merke"><span class="ik"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg></span><div><b>Gratis befaring</b>Svar innen 24 timer</div></div></div></div>
+<div class="band" aria-hidden="true"><div><span>Utvendig maling</span><i>✦</i><span>Innvendig maling</span><i>✦</i><span>Tapetsering</span><i>✦</i><span>Sparkling</span><i>✦</i><span>Vinduer</span><i>✦</i><span>Gjerder</span><i>✦</i><span>Fargeråd</span><i>✦</i><span>Utvendig maling</span><i>✦</i><span>Innvendig maling</span><i>✦</i><span>Tapetsering</span><i>✦</i><span>Sparkling</span><i>✦</i><span>Vinduer</span><i>✦</i><span>Gjerder</span><i>✦</i><span>Fargeråd</span><i>✦</i></div></div>
+<section id="tjenester" class="flate"><div class="wrap"><div class="topp"><div><span class="kicker">Tjenester</span><h2>Dette hjelper vi deg med</h2></div>
+<p>Små og store oppdrag for privatkunder, borettslag og bedrifter i Rådal og omegn.</p></div><div class="tjgrid"><article class="tj"><div class="ik"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></div><h3>Utvendig maling</h3><p>Vask, skraping og maling av kledning, vinduer og gjerder.</p><a href="#tilbud">Få pris →</a></article><article class="tj"><div class="ik"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h13v5H4zM17 6h3v6h-8v3"/><path d="M11 15h2v6h-2z"/></svg></div><h3>Innvendig maling</h3><p>Vegger, tak og listverk med rene linjer.</p><a href="#tilbud">Få pris →</a></article><article class="tj"><div class="ik"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 3l3 3-9 9-3-3 9-9zM9 12l-4 4c-1 1-1 3-3 4 2 0 4 0 5-1l4-4"/></svg></div><h3>Tapetsering</h3><p>Fra fototapet til klassisk mønster – satt opp med presisjon.</p><a href="#tilbud">Få pris →</a></article><article class="tj"><div class="ik"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4L19 6"/></svg></div><h3>Sparkling</h3><p>Jevne flater før maling. Det er her kvaliteten avgjøres.</p><a href="#tilbud">Få pris →</a></article></div></div></section>
+<section id="slik"><div class="wrap"><span class="kicker">Slik jobber vi</span><h2>Enkelt fra første telefon til ferdig jobb</h2><div class="prosess"><div class="steg"><b>01</b><h3>Befaring</h3><p>Vi kommer på befaring i Rådal og ser på jobben sammen med deg – uforpliktende.</p></div><div class="steg"><b>02</b><h3>Fast pris</h3><p>Du får et skriftlig tilbud med tydelig pris og tidsplan. Ingen overraskelser.</p></div><div class="steg"><b>03</b><h3>Ferdig jobb</h3><p>Vi gjør jobben, rydder etter oss og dokumenterer det som skal dokumenteres.</p></div></div></div></section>
+<section class="flate" style="padding-top:0;padding-bottom:0;background:none"><div class="wrap galleri"><figure class=""><img src="https://images.unsplash.com/photo-1787131692382-acc3d818166b?ixid=M3wxMTM3MTQ0fDB8MXxzZWFyY2h8M3x8cGFpbnQlMjByb2xsZXIlMjB3YWxsfGVufDF8MXx8fDE3OTUwMjg5ODB8MA&amp;ixlib=rb-4.1.0&amp;w=1400&amp;q=80&amp;fm=jpg&amp;fit=max" alt="A colorful graffiti portrait of a person on a black metal rolling shutter" loading="lazy"><small class="eks">Eksempelbilde</small></figure><figure class=""><img src="https://images.unsplash.com/photo-1602391019724-a9d60bdf1150?ixid=M3wxMTM3MTQ0fDB8MXxzZWFyY2h8MTR8fHBhaW50JTIwYnJ1c2hlcyUyMGNhbnN8ZW58MXwxfHx8MTc5NTAyODk4MXww&amp;ixlib=rb-4.1.0&amp;w=1400&amp;q=80&amp;fm=jpg&amp;fit=max" alt="orange and white labeled bottle" loading="lazy"><small class="eks">Eksempelbilde</small></figure><figure class=""><img src="https://images.unsplash.com/photo-1792494054580-4bba776087fe?ixid=M3wxMTM3MTQ0fDB8MXxzZWFyY2h8MjV8fHBhaW50JTIwY29sb3IlMjBzd2F0Y2hlc3xlbnwxfDF8fHwxNzk1MDI4OTgxfDA&amp;ixlib=rb-4.1.0&amp;w=1400&amp;q=80&amp;fm=jpg&amp;fit=max" alt="A grid of hand-drawn colored pencil swatches in various shades of pink, purple, and blue" loading="lazy"><small class="eks">Eksempelbilde</small></figure></div></section>
+<section id="omrade"><div class="wrap omrade"><div><span class="kicker">Område</span><h2>Vi dekker hele Bergen</h2>
+<p style="color:var(--dempet)">Vi holder til i Sætervegen 37, 5236 Rådal og tar oppdrag i hele Bergensområdet.</p><div class="chips"><span>Sentrum</span><span>Bergenhus</span><span>Årstad</span><span>Fana</span><span>Ytrebygda</span><span>Fyllingsdalen</span><span>Laksevåg</span><span>Åsane</span><span>Arna</span><span>Askøy</span><span>Os</span><span>Sotra</span></div></div>
+<div class="kart"><iframe loading="lazy" src="https://www.google.com/maps?output=embed&amp;q=S%C3%A6tervegen%2037%2C%205236%20R%C3%A5dal" title="Kart"></iframe></div></div></section>
+<section id="tilbud" class="flate"><div class="wrap tilbud"><div><span class="kicker">Kontakt</span><h2>Få et uforpliktende tilbud</h2>
+<div class="kontakt"><p><span>Telefon</span><a href="tel:+4795223592">952 23 592</a></p><p><span>E-post</span><a href="mailto:j-lyngbo@online.no">j-lyngbo@online.no</a></p>
+<p><span>Adresse</span>Sætervegen 37, 5236 Rådal</p><p><span>Åpningstider</span>Man–fre 07–16 (eksempel)</p></div></div>
+<form onsubmit="event.preventDefault();var f=this;location.href='mailto:j-lyngbo@online.no?subject='+encodeURIComponent('Forespørsel fra nettsiden')+'&body='+encodeURIComponent('Navn: '+f.n.value+'\nTelefon: '+f.t.value+'\n\n'+f.m.value)">
+<label>Navn<input name="n" required autocomplete="name"></label><label>Telefon<input name="t" type="tel" required autocomplete="tel"></label>
+<label>Hva gjelder det?<textarea name="m" placeholder="Fortell kort om jobben – gjerne med adresse"></textarea></label>
+<button class="knapp" type="submit">Send forespørsel</button><small>Forespørselen går rett til Johnny Lyngbø Malerfirma på e-post.</small></form></div></section>
+<footer><div class="wrap">© Johnny Lyngbø Malerfirma · Org.nr. 991442154 · Eksempelbilder av <a href="https://unsplash.com/@lauraadaiphoto?utm_source=nattbott&amp;utm_medium=referral">laura adai</a>, <a href="https://unsplash.com/@fionamurrayphoto?utm_source=nattbott&amp;utm_medium=referral">Fiona Murray-deGraaff</a>, <a href="https://unsplash.com/@albrune?utm_source=nattbott&amp;utm_medium=referral">Alberto Brunello</a>, <a href="https://unsplash.com/@rafaelrex?utm_source=nattbott&amp;utm_medium=referral">Rafael Rex Felisilda</a>, <a href="https://unsplash.com/@lucasgwendt?utm_source=nattbott&amp;utm_medium=referral">Lucas George Wendt</a> på <a href="https://unsplash.com/?utm_source=nattbott&amp;utm_medium=referral">Unsplash</a></div></footer>
+<a class="knapp mobilring" href="tel:+4795223592">Ring 952 23 592</a>
 </body></html>
