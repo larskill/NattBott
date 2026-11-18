@@ -23,6 +23,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+import handverk
 import maler
 import salong
 
@@ -339,9 +340,10 @@ def registrer_unsplash_bruk():
 
 def velg_bilder(kand, antall=5):
     """Fem ulike bilder per demo, valgt ut fra orgnr så samme bedrift alltid får de samme."""
-    if kand["mal"] not in salong.INNHOLD:
+    modul = salong if kand["mal"] in salong.INNHOLD else handverk if kand["mal"] in handverk.INNHOLD else None
+    if not modul:
         return []
-    inn = salong.innhold_for(kand)
+    inn = modul.innhold_for(kand)
     h = int(hashlib.sha1(kand["orgnr"].encode()).hexdigest(), 16)
     valgt = []
     for i in range(antall):
@@ -389,7 +391,10 @@ def kmd_hent(args, cfg):
                 v = vurder(e, b, idag)
                 if v is None:
                     continue
-                kandidater[onr] = til_kandidat(e, b, *v)
+                kand = til_kandidat(e, b, *v)
+                if not kand["epost_lov"]:
+                    continue  # bare bedrifter som kan få e-post (ingen ringing)
+                kandidater[onr] = kand
                 funnet += 1
         if funnet == 0 and fixture is None:
             logg.append(f"ADVARSEL: 0 nye kandidater for {b['id']} – sjekk næringskode/søk i config.json")
@@ -854,6 +859,53 @@ def kmd_gjenskap(args, cfg):
     print(f"Rapport gjenskapt for {args.dato}: {len(leads)} bedrifter")
 
 
+def kmd_samlerapport(args, cfg):
+    """Én samlet rapport med alle aktive leads (siste 60 dager). Leads som bare kan ringes fjernes."""
+    import shutil
+    idag = dt.date.today()
+    grense = (idag - dt.timedelta(days=cfg.get("rapport_dager", 60))).isoformat()
+    sett = les_json(os.path.join(DATA, "sett.json"), {})
+    leads, fjernet = [], []
+    for onr, info in list(sett.items()):
+        if info.get("status") != "demo" or info.get("dato", "") < grense:
+            continue
+        try:
+            e = api_get_enhet(onr)
+        except Exception:  # noqa: BLE001
+            continue
+        b = next((b for b in cfg["bransjer"] if matcher_bransje(e, b)), cfg["bransjer"][0])
+        v = vurder(e, b, idag)
+        kand = til_kandidat(e, b, *(v or (0, [], [])))
+        slug = info["slug"]
+        if v is None or not kand["epost_lov"]:
+            if os.path.isdir(os.path.join(DEMO_DIR, slug)):
+                shutil.rmtree(os.path.join(DEMO_DIR, slug))
+            sett[onr] = {"dato": info["dato"], "status": "utelatt", "slug": slug,
+                         "grunn": "ikke aktiv" if v is None else "kun telefon"}
+            fjernet.append(kand["navn"])
+            continue
+        kand.update(slug=slug, dato=info["dato"], type=info.get("type", "ny"), nettside=info.get("nettside", ""),
+                    problemer=info.get("problemer", []),
+                    demo_url=f"{cfg['demo_base_url'].rstrip('/')}/{slug}/")
+        if getattr(args, "bygg_demoer", False) or not os.path.exists(os.path.join(DEMO_DIR, slug, "index.html")):
+            kand["bilder"] = velg_bilder(kand)
+            os.makedirs(os.path.join(DEMO_DIR, slug), exist_ok=True)
+            with open(os.path.join(DEMO_DIR, slug, "index.html"), "w", encoding="utf-8") as f:
+                f.write(maler.demo_side(kand, cfg))
+        kand["utkast"] = maler.utkast(kand, cfg)
+        leads.append(kand)
+    registrer_unsplash_bruk()
+    skriv_json(os.path.join(DATA, "sett.json"), sett)
+    logg = [f"{len(leads)} aktive leads"] + [f"Fjernet (kun telefon / ikke aktiv): {x}" for x in fjernet]
+    html_ = maler.morgenrapport(leads, {}, logg, cfg, idag.isoformat())
+    os.makedirs(RAPPORT_DIR, exist_ok=True)
+    with open(os.path.join(RAPPORT_DIR, "siste.html"), "w", encoding="utf-8") as f:
+        f.write(html_)
+    print(f"Samlet rapport: {len(leads)} aktive leads, {len(fjernet)} fjernet (kun telefon/ikke aktiv)")
+    if getattr(args, "bygg_demoer", False):
+        print(f"Demoer bygget på nytt: {len(leads)} (med bilder: {sum(1 for k in leads if k.get('bilder'))})")
+
+
 def api_get_enhet(orgnr):
     req = urllib.request.Request(f"{API}/{orgnr}", headers={"Accept": "application/json", "User-Agent": "nattmaskin/1.0"})
     with urllib.request.urlopen(req, timeout=30, context=ssl_kontekst()) as r:
@@ -901,6 +953,8 @@ def main():
     b.add_argument("--utelat-fil", help="JSON {orgnr: grunn} fra nettsjekken")
     sub.add_parser("nettsjekk")
     sub.add_parser("epost")
+    sr = sub.add_parser("samlerapport")
+    sr.add_argument("--bygg-demoer", action="store_true")
     pr = sub.add_parser("publiser-rapport")
     pr.add_argument("dato", nargs="?", default="")
     op = sub.add_parser("oppgrader")
@@ -920,7 +974,8 @@ def main():
     {"hent": kmd_hent, "bygg": kmd_bygg, "slett": kmd_slett,
      "nettsjekk": kmd_nettsjekk, "epost": kmd_epost, "gjenskap": kmd_gjenskap,
      "publiser-rapport": kmd_publiser_rapport,
-     "sjekk-igjen": kmd_sjekk_igjen, "oppgrader": kmd_oppgrader}[args.kmd](args, cfg)
+     "sjekk-igjen": kmd_sjekk_igjen, "oppgrader": kmd_oppgrader,
+     "samlerapport": kmd_samlerapport}[args.kmd](args, cfg)
 
 
 if __name__ == "__main__":

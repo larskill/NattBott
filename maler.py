@@ -2,6 +2,7 @@
 import html
 import urllib.parse
 
+import handverk
 import salong
 
 E = html.escape
@@ -163,6 +164,8 @@ def initialer(navn):
 def demo_side(k, cfg):
     if k["mal"] in salong.INNHOLD:
         return salong.demo(k, cfg)
+    if k["mal"] in handverk.INNHOLD:
+        return handverk.demo(k, cfg)
     inn = INNHOLD[k["mal"]]
     bg, blekk, aksent, aksent_tekst = inn["palett"]
     font_url, font_familie = FONTER[inn["font"]]
@@ -347,144 +350,156 @@ def utkast(k, cfg):
 
 # ---------------- morgenrapport ----------------
 
-STATUSER = [("sendt", "Sendt"), ("ringt", "Ringt"), ("interessert", "Interessert"),
-            ("kunde", "Kunde"), ("nei", "Nei")]
+STATUSER = [("sendt", "Sendt"), ("interessert", "Interessert"), ("kunde", "Kunde"), ("nei", "Nei")]
+
+
+def _datotekst(d, idag):
+    import datetime as _dt
+    try:
+        dager = (_dt.date.fromisoformat(idag) - _dt.date.fromisoformat(d)).days
+    except ValueError:
+        return d
+    return "I dag" if dager == 0 else "I går" if dager == 1 else _dt.date.fromisoformat(d).strftime("%d.%m.%Y")
 
 
 def morgenrapport(leads, utelat, logg, cfg, dato):
-    kort = []
+    """Samlet rapport: fanene Nye / Oppfølging / Avsluttet. Status lagres i nettleseren (localStorage)."""
+    leads = sorted(leads, key=lambda k: (k.get("dato", dato), k.get("poeng", 0)), reverse=True)
+    deler, forrige = [], None
     for k in leads:
         u = k["utkast"]
-        sok = "https://www.google.com/search?q=" + urllib.parse.quote(f"{k['navn']} {k['poststed'] or 'Bergen'}")
-        brreg = f"https://virksomhet.brreg.no/nb/oppslag/enheter/{k['orgnr']}"
-        if u["type"] == "epost":
-            hoved = f'<a class="btn primar" data-auto="sendt" href="{E(u["lenke"])}">Send e-post</a>'
-        elif u["lenke"]:
-            hoved = f'<a class="btn primar" data-auto="ringt" href="{E(u["lenke"])}">Ring {E(k["telefon"])}</a>'
-        else:
-            hoved = '<span class="btn av">Finn kontaktinfo</span>'
-        oppf = (f'<div class="oppf"><b>Tid for oppfølging.</b> '
-                + (f'<a class="btn" data-auto="fulgtopp" href="{E(u["oppf_lenke"])}">Send oppfølging</a>' if u.get("oppf_lenke") else "")
-                + f'<details><summary>Se tekst</summary><pre>{E(u.get("oppf_tekst", ""))}</pre></details></div>')
-        flagg = "".join(f'<li>{E(f)}</li>' for f in k["flagg"])
-        grunner = "".join(f'<span class="chip">{E(g)}</span>' for g in k["grunner"])
-        statusknapper = "".join(f'<button type="button" data-s="{s}">{E(t)}</button>' for s, t in STATUSER)
+        d = k.get("dato", dato)
+        if d != forrige:
+            deler.append(f'<h2 class="datohode" data-dato="{E(d)}">{E(_datotekst(d, dato))}</h2>')
+            forrige = d
+        sok = "https://www.google.com/search?q=" + urllib.parse.quote(f"{k['navn']} {k.get('poststed') or 'Bergen'}")
         oppg = k.get("type") == "oppgradering"
         oppg_html = ""
         if oppg:
-            svak = "".join(f"<li>{E(x)}</li>" for x in k.get("problemer") or [])
+            svak = "".join(f"<li>{E(x)}</li>" for x in k.get("problemer") or []) or "<li>Designet kan moderniseres</li>"
             if any("svarte ikke" in x for x in k.get("problemer") or []):
                 svak += '<li><b>Sjekk selv at siden faktisk er nede før du nevner det.</b></li>'
             oppg_html = (f'<div class="oppg">Dagens side: <a href="https://{E(k.get("nettside", ""))}" target="_blank" '
                          f'rel="noopener">{E(k.get("nettside", ""))}</a><ul>{svak}</ul></div>')
-        kort.append(f"""<article class="lead" data-orgnr="{E(k['orgnr'])}" data-type="{u['type']}" data-art="{'oppg' if oppg else 'ny'}">
-<div class="topp"><div><h3>{E(k['navn'])} <small>{E(k['form'])}</small></h3>
-<p class="meta">{E(k['bransje_navn'])} · {E(k['poststed'])} · poeng {k['poeng']}</p></div>
-<span><span class="art {'oppg' if oppg else ''}">{'Ny side' if not oppg else 'Oppgradering'}</span>
-<span class="kanal {u['type']}">{'E-post' if u['type'] == 'epost' else 'Ring'}</span></span></div>
+        flagg = "".join(f'<li>{E(f)}</li>' for f in k.get("flagg") or [])
+        statusknapper = "".join(f'<button type="button" data-s="{s}">{E(t)}</button>' for s, t in STATUSER)
+        oppf_knapp = (f'<a class="btn" data-auto="fulgtopp" href="{E(u["oppf_lenke"])}">Send oppfølging</a>'
+                      if u.get("oppf_lenke") else "")
+        deler.append(f"""<article class="lead" data-orgnr="{E(k['orgnr'])}" data-dato="{E(d)}" data-art="{'oppg' if oppg else 'ny'}">
+<div class="topp"><div><h3>{E(k['navn'])} <small>{E(k.get('form', ''))}</small></h3>
+<p class="meta">{E(k.get('bransje_navn', ''))} · {E(k.get('poststed', ''))} · {E(k.get('epost', ''))}</p></div>
+<span class="art {'oppg' if oppg else ''}">{'Oppgradering' if oppg else 'Ny side'}</span></div>
 <p class="statuslinje"></p>
 {oppg_html}
-<div class="chips">{grunner}</div>
 {f'<ul class="flagg">{flagg}</ul>' if flagg else ''}
-{oppf}
-<div class="knapper">{hoved}<a class="btn" href="{E(k['demo_url'])}" target="_blank" rel="noopener">Se demo</a>
-<a class="btn" href="{E(sok)}" target="_blank" rel="noopener">Google-sjekk</a><a class="btn" href="{E(brreg)}" target="_blank" rel="noopener">Brreg</a></div>
+<div class="oppf"><b>Tid for oppfølging.</b> Ingen svar ennå. {oppf_knapp}<details><summary>Se tekst</summary><pre>{E(u.get("oppf_tekst", ""))}</pre></details></div>
+<div class="knapper"><a class="btn primar" data-auto="sendt" href="{E(u['lenke'])}">Send e-post</a>
+<a class="btn" href="{E(k['demo_url'])}" target="_blank" rel="noopener">Se demo</a>
+<a class="btn" href="{E(sok)}" target="_blank" rel="noopener">Google-sjekk</a></div>
 <div class="status">{statusknapper}</div>
 <p class="nei-hint">Husk å slette demoen: Actions → «Slett demo» → orgnr <b>{E(k['orgnr'])}</b></p>
 <details><summary>{E(u['emne'])}</summary><pre>{E(u['tekst'])}</pre></details>
 <textarea placeholder="Notat (lagres på denne enheten)"></textarea>
 </article>""")
-    utelat_html = "".join(f"<li>{E(onr)}: {E(grunn)}</li>" for onr, grunn in utelat.items())
     logg_html = "".join(f"<li>{E(l)}</li>" for l in logg)
-    tom = '<p class="tom">Ingen nye demoer i natt.</p>' if not leads else ""
     return f"""<!doctype html><html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Morgenrapport {dato}</title><style>
-:root{{--bg:#FAF8F4;--kort:#fff;--blekk:#1C2321;--dempet:#5E6A66;--linje:#E4E0D8;--aksent:#1F6F5C;--varsel:#9A5B00;--varselbg:#FFF4E0;--blaa:#2F5DA8;--blaabg:#EAF0FA}}
-@media(prefers-color-scheme:dark){{:root{{--bg:#151917;--kort:#1E2321;--blekk:#ECEFEC;--dempet:#9AA6A1;--linje:#2E3532;--aksent:#5CC2A6;--varsel:#F0B45C;--varselbg:#2E2614;--blaa:#8FB3F0;--blaabg:#1C2638}}}}
-*{{box-sizing:border-box;margin:0}}body{{background:var(--bg);color:var(--blekk);font:16px/1.5 system-ui,-apple-system,'Segoe UI',sans-serif;padding:28px 18px}}
-.wrap{{max-width:860px;margin:0 auto}}h1{{font-size:28px;letter-spacing:-.01em}}
-.sum{{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 14px}}.tall{{background:var(--kort);border:1px solid var(--linje);border-radius:12px;padding:10px 16px;min-width:110px}}
-.tall b{{display:block;font-size:24px}}.tall span{{color:var(--dempet);font-size:13px}}
-.filter{{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px}}.filter button{{font:inherit;font-size:14px;padding:6px 12px;border-radius:999px;border:1px solid var(--linje);background:var(--kort);color:var(--blekk);cursor:pointer}}
-.filter button.på{{background:var(--blekk);color:var(--bg);border-color:var(--blekk)}}
-.lead{{background:var(--kort);border:1px solid var(--linje);border-radius:14px;padding:18px 20px;margin-bottom:14px}}
-.lead.ferdig{{opacity:.55}}
-.topp{{display:flex;justify-content:space-between;gap:12px}}h3{{font-size:19px}}h3 small{{color:var(--dempet);font-weight:500;font-size:13px}}
-.meta{{color:var(--dempet);font-size:14px}}.kanal{{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;height:fit-content;border:1px solid var(--linje)}}
-.kanal.epost{{color:var(--aksent)}}.art{{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-right:6px;background:var(--bg);color:var(--dempet)}}
-.art.oppg{{background:#F3E8FF;color:#6B3FA0}}@media(prefers-color-scheme:dark){{.art.oppg{{background:#2C2140;color:#C9A8F0}}}}
-.oppg{{font-size:14px;margin:8px 0;padding:10px 12px;border-radius:8px;border:1px solid var(--linje)}}.oppg ul{{margin:6px 0 0;padding-left:18px;color:var(--dempet)}}.statuslinje{{font-size:14px;font-weight:600;color:var(--blaa);margin-top:4px}}.statuslinje:empty{{display:none}}
-.chips{{margin:10px 0 4px}}.chip{{display:inline-block;font-size:12px;color:var(--dempet);border:1px solid var(--linje);border-radius:999px;padding:2px 9px;margin:0 6px 6px 0}}
+<title>Leads · {dato}</title><style>
+:root{{--bg:#FAF8F4;--kort:#fff;--blekk:#1C2321;--dempet:#5E6A66;--linje:#E4E0D8;--aksent:#1F6F5C;--varsel:#9A5B00;--varselbg:#FFF4E0;--blaa:#2F5DA8;--blaabg:#EAF0FA;--lilla:#6B3FA0;--lillabg:#F3E8FF}}
+@media(prefers-color-scheme:dark){{:root{{--bg:#151917;--kort:#1E2321;--blekk:#ECEFEC;--dempet:#9AA6A1;--linje:#2E3532;--aksent:#5CC2A6;--varsel:#F0B45C;--varselbg:#2E2614;--blaa:#8FB3F0;--blaabg:#1C2638;--lilla:#C9A8F0;--lillabg:#2C2140}}}}
+*{{box-sizing:border-box;margin:0}}body{{background:var(--bg);color:var(--blekk);font:16px/1.5 system-ui,-apple-system,'Segoe UI',sans-serif;padding:24px 16px 60px}}
+.wrap{{max-width:860px;margin:0 auto}}h1{{font-size:26px;letter-spacing:-.01em}}
+.sum{{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}}.tall{{background:var(--kort);border:1px solid var(--linje);border-radius:12px;padding:10px 14px}}
+.tall b{{display:block;font-size:24px}}.tall span{{color:var(--dempet);font-size:13px}}.tall.varsel b{{color:var(--blaa)}}
+.faner{{display:flex;gap:4px;border-bottom:1px solid var(--linje);margin:8px 0 14px;position:sticky;top:0;background:var(--bg);z-index:5;padding-top:6px}}
+.faner button{{font:inherit;font-weight:600;padding:10px 14px;border:0;background:none;color:var(--dempet);border-bottom:2.5px solid transparent;cursor:pointer}}
+.faner button.på{{color:var(--blekk);border-color:var(--blekk)}}.faner em{{font-style:normal;font-weight:500;color:var(--dempet);margin-left:4px}}
+.under{{display:flex;gap:6px;margin:0 0 12px}}.under button{{font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;border:1px solid var(--linje);background:var(--kort);color:var(--blekk);cursor:pointer}}
+.under button.på{{background:var(--blekk);color:var(--bg);border-color:var(--blekk)}}
+#liste{{display:flex;flex-direction:column}}
+.datohode{{font-size:14px;font-weight:700;color:var(--dempet);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px}}
+.lead{{background:var(--kort);border:1px solid var(--linje);border-radius:14px;padding:16px 18px;margin-bottom:12px}}
+.topp{{display:flex;justify-content:space-between;gap:12px}}h3{{font-size:18px}}h3 small{{color:var(--dempet);font-weight:500;font-size:13px}}
+.meta{{color:var(--dempet);font-size:14px;word-break:break-all}}
+.art{{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;height:fit-content;white-space:nowrap;background:var(--bg);color:var(--dempet)}}
+.art.oppg{{background:var(--lillabg);color:var(--lilla)}}
+.statuslinje{{font-size:14px;font-weight:600;color:var(--blaa);margin-top:4px}}.statuslinje:empty{{display:none}}
+.oppg{{font-size:14px;margin:8px 0;padding:10px 12px;border-radius:8px;border:1px solid var(--linje)}}.oppg ul{{margin:6px 0 0;padding-left:18px;color:var(--dempet)}}
 .flagg{{background:var(--varselbg);color:var(--varsel);border-radius:8px;padding:8px 12px 8px 28px;font-size:14px;margin:6px 0}}
 .oppf{{display:none;background:var(--blaabg);color:var(--blaa);border-radius:8px;padding:10px 12px;font-size:14px;margin:8px 0}}
-.lead.folgopp .oppf{{display:block}}.oppf .btn{{margin-left:8px;color:var(--blaa);border-color:var(--blaa)}}
+.lead.folgopp .oppf{{display:block}}.oppf .btn{{margin-left:6px;color:var(--blaa);border-color:var(--blaa)}}
 .knapper{{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 8px}}.btn{{font-size:14px;font-weight:600;padding:7px 14px;border-radius:8px;border:1px solid var(--linje);text-decoration:none;color:var(--blekk);display:inline-block}}
-.btn.primar{{background:var(--aksent);border-color:var(--aksent);color:var(--bg)}}.btn.av{{color:var(--dempet)}}
+.btn.primar{{background:var(--aksent);border-color:var(--aksent);color:var(--bg)}}
+.lead[data-gruppe=oppf] .btn.primar,.lead[data-gruppe=avsluttet] .btn.primar{{background:none;color:var(--blekk);border-color:var(--linje)}}
 .status{{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 6px}}.status button{{font:inherit;font-size:13px;padding:4px 10px;border-radius:6px;border:1px dashed var(--linje);background:none;color:var(--dempet);cursor:pointer}}
 .status button.på{{border-style:solid;border-color:var(--blaa);color:var(--blaa);font-weight:600}}
 .nei-hint{{display:none;font-size:13px;color:var(--varsel);margin:4px 0}}.lead[data-status=nei] .nei-hint{{display:block}}
 details summary{{cursor:pointer;font-size:14px;color:var(--dempet);margin-top:4px}}pre{{white-space:pre-wrap;font:14px/1.5 ui-monospace,Menlo,monospace;background:var(--bg);border:1px solid var(--linje);border-radius:8px;padding:12px;margin-top:8px;user-select:all}}
 textarea{{width:100%;margin-top:8px;font-size:14px;font-family:inherit;line-height:1.4;padding:8px 10px;border:1px solid var(--linje);border-radius:8px;background:var(--bg);color:var(--blekk);min-height:38px;resize:vertical}}
-.tom{{color:var(--dempet)}}.fot{{margin-top:28px;color:var(--dempet);font-size:13px}}.fot ul{{padding-left:18px}}
-.info{{font-size:13px;color:var(--dempet);margin-bottom:16px}}
+.tom{{color:var(--dempet);padding:30px 0;text-align:center;display:none}}.info{{font-size:13px;color:var(--dempet);margin:2px 0 8px}}
+.toast{{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(80px);background:var(--blekk);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;transition:transform .25s;z-index:9}}
+.toast.vis{{transform:translateX(-50%) translateY(0)}}.fot{{margin-top:24px;color:var(--dempet);font-size:13px}}
+@media(max-width:600px){{.sum{{grid-template-columns:repeat(2,1fr)}}}}
 </style></head><body><div class="wrap">
-<h1>Morgenrapport · {dato}</h1>
-<div class="sum"><div class="tall"><b id="n-alle">{len(leads)}</b><span>demoer</span></div><div class="tall"><b id="n-ny">–</b><span>ikke kontaktet</span></div>
-<div class="tall"><b id="n-oppf">–</b><span>følg opp</span></div><div class="tall"><b id="n-int">–</b><span>interessert</span></div><div class="tall"><b id="n-kunde">–</b><span>kunder</span></div></div>
-<div class="filter"><button data-f="alle" class="på">Alle</button><button data-f="ny">Ikke kontaktet</button><button data-f="oppf">Følg opp</button>
-<button data-f="oppgradering">Oppgradering</button><button data-f="aktiv">Sendt/ringt</button><button data-f="int">Interessert</button><button data-f="ferdig">Kunde/nei</button></div>
-<p class="info">Status lagres i nettleseren på denne enheten. «Send e-post» og «Ring» merker automatisk. E-post uten svar etter 4 dager havner under «Følg opp».
-E-post går bare til AS og andre selskaper – enkeltpersonforetak ringer du (markedsføringsloven § 15).</p>
-{tom}{''.join(kort)}
-<div class="fot"><details><summary>Utelatt ({len(utelat)})</summary><ul>{utelat_html}</ul></details>
-<details><summary>Logg</summary><ul>{logg_html}</ul></details></div>
-</div>
+<h1>Leads</h1><p class="info">Oppdatert {dato}. Status lagres i nettleseren på denne enheten – bruk samme enhet til oppfølging.</p>
+<div class="sum"><div class="tall"><b id="n-nye">–</b><span>nye</span></div><div class="tall varsel"><b id="n-na">–</b><span>følg opp nå</span></div>
+<div class="tall"><b id="n-int">–</b><span>interessert</span></div><div class="tall"><b id="n-kunde">–</b><span>kunder</span></div></div>
+<div class="faner"><button data-fane="nye" class="på">Nye<em id="f-nye"></em></button><button data-fane="oppf">Oppfølging<em id="f-oppf"></em></button>
+<button data-fane="avsluttet">Avsluttet<em id="f-avsluttet"></em></button></div>
+<div class="under" id="under"><button data-art="alle" class="på">Alle</button><button data-art="ny">Ny side</button><button data-art="oppg">Oppgradering</button></div>
+<div id="liste">{''.join(deler)}</div><p class="tom" id="tom">Ingenting her.</p>
+<div class="fot"><details><summary>Logg</summary><ul>{logg_html}</ul></details></div>
+</div><div class="toast" id="toast"></div>
 <script>
 (function(){{
-const NØKKEL="nb_status_v1", DAG=864e5, OPPF_DAGER=4;
+const NØKKEL="nb_status_v1",DAG=864e5,OPPF=4;
 let db={{}};try{{db=JSON.parse(localStorage.getItem(NØKKEL)||"{{}}")}}catch(e){{}}
 const lagre=()=>{{try{{localStorage.setItem(NØKKEL,JSON.stringify(db))}}catch(e){{}}}};
-const navn={{sendt:"E-post sendt",ringt:"Ringt",interessert:"Interessert",kunde:"Kunde",nei:"Takket nei",fulgtopp:"Fulgt opp"}};
-const fmt=t=>new Date(t).toLocaleDateString("no-NO",{{day:"numeric",month:"short"}});
+const navn={{sendt:"E-post sendt",ringt:"Kontaktet",interessert:"Interessert",kunde:"Kunde",nei:"Takket nei",fulgtopp:"Fulgt opp"}};
+const siden=t=>{{const d=Math.floor((Date.now()-t)/DAG);return d<=0?"i dag":d===1?"i går":d+" dager siden"}};
+let fane="nye",art="alle";
+const elementer=[...document.getElementById("liste").children];
+function info(el){{const r=db[el.dataset.orgnr]||{{}},s=r.s||"";
+  const na=(s==="sendt"||s==="ringt")&&Date.now()-r.t>OPPF*DAG;
+  const g=!s?"nye":(s==="kunde"||s==="nei")?"avsluttet":"oppf";
+  const pri=na?0:s==="interessert"?1:(s==="sendt"||s==="ringt")?2:3;return {{r,s,na,g,pri}}}}
 function tegn(){{
-  const n={{ny:0,oppf:0,int:0,kunde:0}};
-  document.querySelectorAll(".lead").forEach(el=>{{
-    const r=db[el.dataset.orgnr]||{{}}, s=r.s||"";
-    el.dataset.status=s;
-    el.querySelectorAll(".status button").forEach(b=>b.classList.toggle("på",b.dataset.s===s||(s==="fulgtopp"&&b.dataset.s==="sendt")));
-    const linje=el.querySelector(".statuslinje");
-    linje.textContent=s?navn[s]+" "+fmt(r.t)+(r.oppf?" · fulgt opp "+fmt(r.oppf):""):"";
-    const folgopp=(s==="sendt"&&Date.now()-r.t>OPPF_DAGER*DAG);
-    el.classList.toggle("folgopp",folgopp);el.classList.toggle("ferdig",s==="kunde"||s==="nei");
-    const ta=el.querySelector("textarea");if(document.activeElement!==ta)ta.value=r.notat||"";
-    if(!s)n.ny++;if(folgopp)n.oppf++;if(s==="interessert")n.int++;if(s==="kunde")n.kunde++;
-    el.dataset.gruppe=!s?"ny":folgopp?"oppf":(s==="kunde"||s==="nei")?"ferdig":s==="interessert"?"int":"aktiv";
+  const n={{nye:0,oppf:0,avsluttet:0,na:0,int:0,kunde:0}};let synlige=0;
+  elementer.forEach((el,i)=>{{
+    if(!el.classList.contains("lead"))return;
+    const x=info(el);n[x.g]++;if(x.na)n.na++;if(x.s==="interessert")n.int++;if(x.s==="kunde")n.kunde++;
+    el.dataset.status=x.s;el.dataset.gruppe=x.g;el.classList.toggle("folgopp",x.na);
+    el.querySelectorAll(".status button").forEach(b=>b.classList.toggle("på",b.dataset.s===x.s||(x.s==="fulgtopp"&&b.dataset.s==="sendt")));
+    el.querySelector(".statuslinje").textContent=x.s?navn[x.s]+" "+siden(x.r.t)+(x.r.oppf?" · fulgt opp "+siden(x.r.oppf):""):"";
+    const ta=el.querySelector("textarea");if(document.activeElement!==ta)ta.value=x.r.notat||"";
+    const vis=x.g===fane&&(fane!=="nye"||art==="alle"||el.dataset.art===art);
+    el.style.display=vis?"":"none";if(vis)synlige++;
+    el.style.order=fane==="nye"?i:(x.pri*1e14-(x.r.t||0)/1e3);
   }});
-  for(const k in n){{const e=document.getElementById("n-"+k);if(e)e.textContent=n[k]}}
-  filtrer();
+  elementer.forEach((el,i)=>{{if(!el.classList.contains("datohode"))return;
+    el.style.order=i;const har=fane==="nye"&&elementer.some(c=>c.classList.contains("lead")&&c.dataset.dato===el.dataset.dato&&c.style.display!=="none");
+    el.style.display=har?"":"none"}});
+  for(const k of ["nye","na","int","kunde"])document.getElementById("n-"+k).textContent=n[k];
+  for(const k of ["nye","oppf","avsluttet"])document.getElementById("f-"+k).textContent=n[k];
+  document.getElementById("tom").style.display=synlige?"none":"block";
+  document.getElementById("under").style.display=fane==="nye"?"":"none";
 }}
-let filter="alle";
-function filtrer(){{document.querySelectorAll(".lead").forEach(el=>{{
-  const g=el.dataset.gruppe;el.style.display=(filter==="alle"||g===filter||(filter==="aktiv"&&g==="oppf")||
-    (filter==="oppgradering"&&el.dataset.art==="oppg"))?"":"none"}})}}
+function toast(t){{const e=document.getElementById("toast");e.textContent=t;e.classList.add("vis");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("vis"),2600)}}
 function sett(orgnr,s){{const r=db[orgnr]||{{}};
-  if(s==="fulgtopp"){{r.oppf=Date.now();r.s="fulgtopp";}}
-  else if(r.s===s){{delete r.s;delete r.t;}} else {{r.s=s;r.t=Date.now();}}
+  if(s==="fulgtopp"){{r.oppf=Date.now();r.s="fulgtopp";}}else if(r.s===s){{delete r.s;delete r.t;}}else{{r.s=s;r.t=Date.now();}}
   db[orgnr]=r;lagre();tegn();}}
 document.addEventListener("click",e=>{{
   const lead=e.target.closest(".lead");
-  const sb=e.target.closest(".status button");if(sb&&lead){{sett(lead.dataset.orgnr,sb.dataset.s);return;}}
+  const sb=e.target.closest(".status button");if(sb&&lead){{sett(lead.dataset.orgnr,sb.dataset.s);if(fane==="nye"&&db[lead.dataset.orgnr]&&db[lead.dataset.orgnr].s)toast("Flyttet til «"+(["kunde","nei"].includes(db[lead.dataset.orgnr].s)?"Avsluttet":"Oppfølging")+"»");return;}}
   const auto=e.target.closest("[data-auto]");if(auto&&lead){{const r=db[lead.dataset.orgnr]||{{}};
-    if(auto.dataset.auto==="fulgtopp"||!r.s)sett(lead.dataset.orgnr,auto.dataset.auto);}}
-  const fb=e.target.closest(".filter button");if(fb){{filter=fb.dataset.f;
-    document.querySelectorAll(".filter button").forEach(b=>b.classList.toggle("på",b===fb));filtrer();}}
+    if(auto.dataset.auto==="fulgtopp"||!r.s){{sett(lead.dataset.orgnr,auto.dataset.auto);if(auto.dataset.auto==="sendt")toast("Merket som sendt – ligger nå under «Oppfølging»");}}}}
+  const fb=e.target.closest(".faner button");if(fb){{fane=fb.dataset.fane;document.querySelectorAll(".faner button").forEach(b=>b.classList.toggle("på",b===fb));tegn();window.scrollTo(0,0);}}
+  const ub=e.target.closest(".under button");if(ub){{art=ub.dataset.art;document.querySelectorAll(".under button").forEach(b=>b.classList.toggle("på",b===ub));tegn();}}
 }});
 document.addEventListener("input",e=>{{if(e.target.tagName==="TEXTAREA"){{const lead=e.target.closest(".lead");
   const r=db[lead.dataset.orgnr]||{{}};r.notat=e.target.value;db[lead.dataset.orgnr]=r;lagre();}}}});
 tegn();
 }})();
-</script>
-</body></html>"""
+</script></body></html>"""
 
 
 # ---------------- låst (kryptert) rapportside ----------------

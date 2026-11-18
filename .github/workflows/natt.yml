@@ -52,6 +52,12 @@ jobs:
           UNSPLASH_KEY: ${{ secrets.UNSPLASH_KEY }}
         run: python3 nattmaskin.py bygg --utelat-fil data/utelat.json
 
+      - name: Samle alle aktive leads i én rapport
+        if: steps.vakt.outputs.kjor == 'true'
+        env:
+          UNSPLASH_KEY: ${{ secrets.UNSPLASH_KEY }}
+        run: python3 nattmaskin.py samlerapport
+
       - name: Krypter og publiser morgenrapporten
         if: steps.vakt.outputs.kjor == 'true'
         env:
