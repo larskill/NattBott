@@ -52,7 +52,8 @@
   "936512194": {
     "dato": "2026-11-17",
     "status": "har_nettside",
-    "grunn": "belezabeauty.no"
+    "grunn": "belezabeauty.no",
+    "slug": "beleza-mj-beauty"
   },
   "922806829": {
     "dato": "2026-11-17",
@@ -93,12 +94,14 @@
   "918319263": {
     "dato": "2026-11-17",
     "status": "har_nettside",
-    "grunn": "monarchy.no"
+    "grunn": "monarchy.no",
+    "slug": "monarchy-studio"
   },
   "985465363": {
     "dato": "2026-11-17",
     "status": "har_nettside",
-    "grunn": "bergenvarme.no"
+    "grunn": "bergenvarme.no",
+    "slug": "bergen-varme-sanitaer"
   },
   "937077084": {
     "dato": "2026-11-17",
@@ -167,8 +170,14 @@
   },
   "947091336": {
     "dato": "2026-11-17",
-    "status": "har_nettside",
-    "grunn": "classique-hardesign.no"
+    "status": "demo",
+    "slug": "classique-hardesign-a-s",
+    "type": "oppgradering",
+    "nettside": "classique-hardesign.no",
+    "problemer": [
+      "Mangler beskrivelse for Google-søk",
+      "Treg å laste (5 sekunder)"
+    ]
   },
   "911828189": {
     "dato": "2026-11-17",
