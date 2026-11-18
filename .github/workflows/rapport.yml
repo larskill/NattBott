@@ -6,6 +6,9 @@ on:
       dato:
         description: "Dato (ÅÅÅÅ-MM-DD). La stå tom for i dag."
         required: false
+      oppgrader:
+        description: "Orgnr som skal legges til som oppgradering (kommaseparert)"
+        required: false
       sjekk_nettsider:
         description: "Sjekk på nytt om bedriftene har nettside (fjerner demoene deres)"
         type: boolean
@@ -33,6 +36,9 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: main
+      - name: Legg til oppgraderinger
+        if: ${{ inputs.oppgrader != '' }}
+        run: python3 nattmaskin.py oppgrader "${{ inputs.oppgrader }}" "${{ inputs.dato }}"
       - name: Sjekk nettsider på nytt
         if: ${{ inputs.sjekk_nettsider }}
         env:

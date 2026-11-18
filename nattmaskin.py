@@ -717,6 +717,24 @@ def kmd_sjekk_igjen(args, cfg):
     print("\n".join(logg) or "Ingen endringer")
 
 
+def kmd_oppgrader(args, cfg):
+    """Legger bedrifter manuelt til som oppgraderings-leads (f.eks. pen-men-utdatert design som revisjonen ikke ser)."""
+    sett = les_json(os.path.join(DATA, "sett.json"), {})
+    dato = args.dato or dt.date.today().isoformat()
+    for onr in [x.strip() for x in args.orgnr.split(",") if x.strip()]:
+        e = api_get_enhet(onr)
+        info = sett.get(onr, {})
+        dom = (info.get("nettside") or egen_nettside(e.get("hjemmeside"))
+               or re.sub(r"^.*?:\s*", "", info.get("grunn") or "").strip())
+        _, svakheter = revider_nettside(dom) if dom else (0, [])
+        slug = info.get("slug") or slugify(pent_navn(e.get("navn", "")))
+        sett[onr] = {"dato": dato, "status": "demo", "slug": slug, "type": "oppgradering",
+                     "nettside": dom, "problemer": svakheter}
+        print(f"Lagt til som oppgradering: {pent_navn(e.get('navn', ''))} ({dom or 'ukjent nettside'})"
+              f" – {'; '.join(svakheter) or 'ingen tekniske svakheter, bare design'}")
+    skriv_json(os.path.join(DATA, "sett.json"), sett)
+
+
 # ---------- morgenrapport på e-post ----------
 
 def kmd_epost(args, cfg):
@@ -856,6 +874,9 @@ def main():
     sub.add_parser("epost")
     pr = sub.add_parser("publiser-rapport")
     pr.add_argument("dato", nargs="?", default="")
+    op = sub.add_parser("oppgrader")
+    op.add_argument("orgnr")
+    op.add_argument("dato", nargs="?", default="")
     si = sub.add_parser("sjekk-igjen")
     si.add_argument("dato", nargs="?", default="")
     g = sub.add_parser("gjenskap")
@@ -870,7 +891,7 @@ def main():
     {"hent": kmd_hent, "bygg": kmd_bygg, "slett": kmd_slett,
      "nettsjekk": kmd_nettsjekk, "epost": kmd_epost, "gjenskap": kmd_gjenskap,
      "publiser-rapport": kmd_publiser_rapport,
-     "sjekk-igjen": kmd_sjekk_igjen}[args.kmd](args, cfg)
+     "sjekk-igjen": kmd_sjekk_igjen, "oppgrader": kmd_oppgrader}[args.kmd](args, cfg)
 
 
 if __name__ == "__main__":

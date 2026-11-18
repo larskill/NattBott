@@ -265,8 +265,12 @@ def _oppgradering_utkast(k, cfg):
         tekst = (
             f"Hei!\n\n"
             f"Jeg heter {s['navn']} og lager nettsider for små bedrifter i Bergen. "
-            f"Jeg så på nettsiden deres ({dom}) og la merke til et par ting:\n\n{punkter}\n\n"
-            f"Derfor har jeg laget et forslag til en ny og mer moderne side:\n\n{k['demo_url']}\n\n"
+            + (f"Jeg så på nettsiden deres ({dom}) og la merke til et par ting:\n\n{punkter}\n\n"
+               f"Derfor har jeg laget et forslag til en ny og mer moderne side:\n\n{k['demo_url']}\n\n"
+               if punkter else
+               f"Jeg så på nettsiden deres ({dom}) og laget et forslag til et nytt og mer moderne design:\n\n"
+               f"{k['demo_url']}\n\n")
+            + 
             f"Dere beholder domenet {dom}, og jeg flytter innholdet over. "
             f"Pris: {p['oppstart']} kr i oppstart og {p['per_mnd']} kr/mnd for drift og små endringer. Ingen binding. "
             f"Betaler dere mer enn dette for nettsiden i dag, sparer dere penger samtidig.\n\n"
@@ -280,12 +284,14 @@ def _oppgradering_utkast(k, cfg):
                       f"innhold før dere bestemmer dere. Et kort ja eller nei holder.\n\nVennlig hilsen\n{s['navn']}\n{s['telefon']}")
         oppf = "mailto:{}?subject={}&body={}".format(k["epost"], urllib.parse.quote("Re: " + emne), urllib.parse.quote(oppf_tekst))
         return {"type": "epost", "emne": emne, "tekst": tekst, "lenke": mailto, "oppf_tekst": oppf_tekst, "oppf_lenke": oppf}
+    funn = (f"og la merke til et par ting – blant annet: {k['problemer'][0].lower()}. " if k.get("problemer")
+            else "og synes designet kan moderniseres. ")
     tekst = (
-        f"«Hei, jeg heter {s['navn']}. Jeg lager nettsider for små bedrifter i Bergen. Jeg så på nettsiden deres, "
-        f"{dom}, og la merke til et par ting – blant annet: {(k.get('problemer') or ['den kan moderniseres'])[0].lower()}. "
+        f"«Hei, jeg heter {s['navn']}. Jeg lager nettsider for små bedrifter i Bergen. "
+        f"Jeg så på nettsiden deres, {dom}, {funn}"
         f"Jeg har laget et forslag til en ny versjon – kan jeg sende deg lenken på SMS eller e-post?»\n\n"
-        f"Svakheter du kan nevne:\n{punkter}\n\n"
-        f"Hvis ja: be om samtykke og send {k.get('demo_url', '')}\n"
+        + (f"Svakheter du kan nevne:\n{punkter}\n\n" if punkter else "")
+        + f"Hvis ja: be om samtykke og send {k.get('demo_url', '')}\n"
         f"Pris: {p['oppstart']} kr oppstart + {p['per_mnd']} kr/mnd, ingen binding. De beholder domenet."
     )
     lenke = "tel:+47" + k["telefon"].replace(" ", "") if k.get("telefon") else ""
