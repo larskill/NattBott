@@ -373,6 +373,8 @@ def morgenrapport(leads, utelat, logg, cfg, dato):
         oppg_html = ""
         if oppg:
             svak = "".join(f"<li>{E(x)}</li>" for x in k.get("problemer") or [])
+            if any("svarte ikke" in x for x in k.get("problemer") or []):
+                svak += '<li><b>Sjekk selv at siden faktisk er nede før du nevner det.</b></li>'
             oppg_html = (f'<div class="oppg">Dagens side: <a href="https://{E(k.get("nettside", ""))}" target="_blank" '
                          f'rel="noopener">{E(k.get("nettside", ""))}</a><ul>{svak}</ul></div>')
         kort.append(f"""<article class="lead" data-orgnr="{E(k['orgnr'])}" data-type="{u['type']}" data-art="{'oppg' if oppg else 'ny'}">

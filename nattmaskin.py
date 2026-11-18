@@ -247,13 +247,23 @@ def sosial_side(url):
     return bool(url and re.search(r"facebook|instagram|fb\.com|tiktok|linkedin", url, re.I))
 
 
+def gyldig_domene(d):
+    """Renser og sjekker et domene (støtter æøå). Returnerer '' hvis det ikke ser ut som et domene."""
+    d = (d or "").strip().lower()
+    if not d or sosial_side(d):
+        return ""
+    d = urllib.parse.urlparse(d if "://" in d else "http://" + d).netloc.split("@")[-1].split(":")[0]
+    d = d.removeprefix("www.")
+    try:
+        ascii_ = d.encode("idna").decode()
+    except UnicodeError:
+        return ""
+    return d if re.fullmatch(r"[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}", ascii_) else ""
+
+
 def egen_nettside(url):
     """Domenet til bedriftens egen nettside fra registeret (ikke Facebook o.l.), ellers ''."""
-    url = (url or "").strip()
-    if not url or sosial_side(url):
-        return ""
-    dom = urllib.parse.urlparse(url if "://" in url else "http://" + url).netloc.lower()
-    return dom.removeprefix("www.")
+    return gyldig_domene(url)
 
 
 # ---------- bilder fra Unsplash (eller Pexels) – gratis lisens ----------
@@ -600,8 +610,13 @@ GAMMEL_TEKNOLOGI = [
 ]
 
 
-def hent_side_info(url, timeout=10):
+def hent_side_info(url, timeout=12):
     """(html, sekunder, endelig_url, feil). feil: None, 'http' (svarer, men avviser oss) eller 'nett' (svarer ikke)."""
+    deler = urllib.parse.urlsplit(url)
+    try:
+        url = urllib.parse.urlunsplit(deler._replace(netloc=deler.netloc.encode("idna").decode()))
+    except UnicodeError:
+        return None, None, None, "nett"
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                                                              "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"})
     start = time.time()
@@ -619,6 +634,9 @@ def revider_nettside(dom, idag=None):
     """Finner konkrete svakheter. Returnerer (poeng, svakheter). Sterke svakheter = 2 poeng, svake = 1.
     Siden må kunne leses for å bli vurdert – avviser den oss (f.eks. 403), lar vi den være."""
     idag = idag or dt.date.today()
+    dom = gyldig_domene(dom)
+    if not dom:
+        return 0, []
     feil = []
     html_ = sek = endelig = None
     for url in (f"https://{dom}", f"https://www.{dom}", f"http://{dom}", f"http://www.{dom}"):
@@ -626,12 +644,17 @@ def revider_nettside(dom, idag=None):
         if html_:
             break
         feil.append(f)
-    if not html_:
-        if feil and all(f == "nett" for f in feil):
+    if not html_ and feil and all(f == "nett" for f in feil):
+        time.sleep(3)  # nytt forsøk med god tid før vi påstår at siden er nede
+        html_, sek, endelig, f = hent_side_info(f"https://{dom}", timeout=25)
+        if not html_:
+            html_, sek, endelig, f = hent_side_info(f"http://{dom}", timeout=25)
+        if not html_ and f == "nett":
             return 3, ["Nettsiden svarte ikke da jeg prøvde å åpne den"]
+    if not html_:
         return 0, []
     https_ok = (endelig or "").startswith("https")
-    sterke, svake = [], []
+    sterke, svake = [], []  # noqa
     if PARKERING.search(html_) and len(html_) < 20000:
         return 3, ["Domenet viser bare en parkeringsside"]
     if re.search(r"facebook\.com", endelig or "", re.I):
@@ -641,8 +664,10 @@ def revider_nettside(dom, idag=None):
     if not re.search(r'<meta[^>]+name=["\']?viewport', html_, re.I):
         sterke.append("Ikke tilpasset mobil")
     aar = [int(x) for x in re.findall(r"(?:©|&copy;|copyright)\D{0,40}?((?:19|20)\d\d)(?!\d)", html_, re.I)]
-    if aar and max(aar) <= idag.year - 3:
+    if aar and max(aar) <= idag.year - 5:
         sterke.append(f"Ser ikke ut til å ha vært oppdatert siden {max(aar)}")
+    elif aar and max(aar) <= idag.year - 3:
+        svake.append(f"Ser ikke ut til å ha vært oppdatert siden {max(aar)}")
     for mønster, navn in GAMMEL_TEKNOLOGI:
         if mønster.search(html_):
             sterke.append(f"Bygget med utdatert teknologi ({navn})")
@@ -696,8 +721,12 @@ def kmd_sjekk_igjen(args, cfg):
         dom = info.get("nettside") or egen_nettside(e.get("hjemmeside")) or (
             info.get("grunn") if info["status"] == "har_nettside" else None) or finn_nettside(kand)
         if dom:
-            dom = re.sub(r"^.*?:\s*", "", dom).strip()
+            dom = gyldig_domene(re.sub(r"^.*?:\s*", "", dom).strip())
         slug = info.get("slug") or slugify(kand["navn"])
+        if not dom and info.get("type") == "oppgradering":
+            sett[onr] = {"dato": dato, "status": "demo", "slug": slug}
+            logg.append(f"Ingen gyldig nettside – behandles som ny side: {kand['navn']}")
+            continue
         if not dom:
             if info["status"] == "har_nettside":
                 sett[onr] = {"dato": dato, "status": "demo", "slug": slug}
