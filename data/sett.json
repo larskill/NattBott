@@ -588,13 +588,9 @@
   },
   "985727139": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "sletten-elektro",
-    "type": "oppgradering",
-    "nettside": "slettenelektro.no",
-    "problemer": [
-      "Ser ikke ut til å ha vært oppdatert siden 2022"
-    ]
+    "status": "har_nettside",
+    "grunn": "slettenelektro.no",
+    "slug": "sletten-elektro"
   },
   "936004571": {
     "dato": "2026-11-18",
@@ -644,13 +640,9 @@
   },
   "928805271": {
     "dato": "2026-11-18",
-    "status": "demo",
-    "slug": "opa-glass",
-    "type": "oppgradering",
-    "nettside": "opaglass.no",
-    "problemer": [
-      "Ser ikke ut til å ha vært oppdatert siden 2023"
-    ]
+    "status": "har_nettside",
+    "grunn": "opaglass.no",
+    "slug": "opa-glass"
   },
   "835885372": {
     "dato": "2026-11-18",
@@ -675,12 +667,7 @@
   "934440617": {
     "dato": "2026-11-18",
     "status": "demo",
-    "slug": "beauty-by-andersen",
-    "type": "oppgradering",
-    "nettside": "_beautybyandersen",
-    "problemer": [
-      "Nettsiden svarte ikke da jeg prøvde å åpne den"
-    ]
+    "slug": "beauty-by-andersen"
   },
   "894482532": {
     "dato": "2026-11-18",
