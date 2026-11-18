@@ -138,5 +138,7 @@
       ]
     }
   ],
-  "rapport_til": "killingberglars@gmail.com"
+  "rapport_til": "killingberglars@gmail.com",
+  "maks_oppgradering_kandidater": 25,
+  "maks_oppgradering_per_natt": 8
 }

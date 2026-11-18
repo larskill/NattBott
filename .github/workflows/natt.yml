@@ -1,8 +1,10 @@
 name: Nattmaskin
 
 on:
-  schedule:
-    - cron: "17 2 * * *"   # hver natt ca. kl. 03:17 norsk tid
+  schedule:                 # GitHub dropper av og til planlagte kjøringer – derfor tre forsøk.
+    - cron: "17 2 * * *"    # ca. 03:17 norsk tid
+    - cron: "47 3 * * *"    # ca. 04:47 (reserve)
+    - cron: "17 5 * * *"    # ca. 06:17 (reserve)
   workflow_dispatch:        # «Run workflow»-knapp for manuell kjøring
 
 permissions:
@@ -25,36 +27,53 @@ jobs:
         with:
           ref: main   # alltid nyeste versjon, også ved «Re-run»
 
+      - name: Har den allerede kjørt i dag?
+        id: vakt
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$(cat data/sist_natt.txt 2>/dev/null)" = "$(date -u +%F)" ]; then
+            echo "kjor=false" >> "$GITHUB_OUTPUT"; echo "Allerede kjørt i dag – hopper over."
+          else
+            echo "kjor=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Hent bedrifter fra Brønnøysund
+        if: steps.vakt.outputs.kjor == 'true'
         run: python3 nattmaskin.py hent
 
       - name: Sjekk om de allerede har nettside
+        if: steps.vakt.outputs.kjor == 'true'
         env:
           TAVILY_KEY: ${{ secrets.TAVILY_KEY }}
         run: python3 nattmaskin.py nettsjekk
 
       - name: Lag demoer og morgenrapport
+        if: steps.vakt.outputs.kjor == 'true'
         env:
           UNSPLASH_KEY: ${{ secrets.UNSPLASH_KEY }}
         run: python3 nattmaskin.py bygg --utelat-fil data/utelat.json
 
       - name: Krypter og publiser morgenrapporten
+        if: steps.vakt.outputs.kjor == 'true'
         env:
           RAPPORT_PASSORD: ${{ secrets.RAPPORT_PASSORD }}
         run: python3 nattmaskin.py publiser-rapport
 
       - name: Lagre demoer og status i repoet
+        if: steps.vakt.outputs.kjor == 'true'
         run: |
           git config user.name "nattmaskin"
           git config user.email "nattmaskin@users.noreply.github.com"
-          git add docs data/sett.json $(ls data/unsplash_brukt.json 2>/dev/null)
+          git add docs data/sett.json data/sist_natt.txt $(ls data/unsplash_brukt.json 2>/dev/null)
           git diff --cached --quiet || git commit -m "Natt $(date +%F)"
           git pull --rebase origin main
           git push origin HEAD:main
 
       - uses: actions/configure-pages@v5
+        if: steps.vakt.outputs.kjor == 'true'
       - uses: actions/upload-pages-artifact@v3
+        if: steps.vakt.outputs.kjor == 'true'
         with:
           path: docs
       - id: deploy
+        if: steps.vakt.outputs.kjor == 'true'
         uses: actions/deploy-pages@v4

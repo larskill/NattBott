@@ -256,7 +256,46 @@ Interessert? <a href="tel:{E(selger['telefon'].replace(' ', ''))}">{E(selger['te
 
 # ---------------- salgsutkast ----------------
 
+def _oppgradering_utkast(k, cfg):
+    s, p = cfg["selger"], cfg["pris"]
+    dom = k.get("nettside", "")
+    punkter = "\n".join(f"– {x}" for x in (k.get("problemer") or [])[:4])
+    if k.get("epost_lov"):
+        emne = f"Forslag til ny nettside for {k['navn']}"
+        tekst = (
+            f"Hei!\n\n"
+            f"Jeg heter {s['navn']} og lager nettsider for små bedrifter i Bergen. "
+            f"Jeg så på nettsiden deres ({dom}) og la merke til et par ting:\n\n{punkter}\n\n"
+            f"Derfor har jeg laget et forslag til en ny og mer moderne side:\n\n{k['demo_url']}\n\n"
+            f"Dere beholder domenet {dom}, og jeg flytter innholdet over. "
+            f"Pris: {p['oppstart']} kr i oppstart og {p['per_mnd']} kr/mnd for drift og små endringer. Ingen binding. "
+            f"Betaler dere mer enn dette for nettsiden i dag, sparer dere penger samtidig.\n\n"
+            f"Passer det med en kort prat? Svar på denne e-posten eller ring meg på {s['telefon']}.\n\n"
+            f"Vennlig hilsen\n{s['navn']}\n\n"
+            f"Ønsker dere ikke slike henvendelser, holder det å svare «nei takk» – da sletter jeg forslaget."
+        )
+        mailto = "mailto:{}?subject={}&body={}".format(k["epost"], urllib.parse.quote(emne), urllib.parse.quote(tekst))
+        oppf_tekst = (f"Hei igjen!\n\nVille bare høre om dere fikk sett forslaget til ny nettside for {k['navn']}:\n"
+                      f"{k['demo_url']}\n\nJeg viser gjerne hvordan den ser ut på mobil, og tilpasser farger og "
+                      f"innhold før dere bestemmer dere. Et kort ja eller nei holder.\n\nVennlig hilsen\n{s['navn']}\n{s['telefon']}")
+        oppf = "mailto:{}?subject={}&body={}".format(k["epost"], urllib.parse.quote("Re: " + emne), urllib.parse.quote(oppf_tekst))
+        return {"type": "epost", "emne": emne, "tekst": tekst, "lenke": mailto, "oppf_tekst": oppf_tekst, "oppf_lenke": oppf}
+    tekst = (
+        f"«Hei, jeg heter {s['navn']}. Jeg lager nettsider for små bedrifter i Bergen. Jeg så på nettsiden deres, "
+        f"{dom}, og la merke til et par ting – blant annet: {(k.get('problemer') or ['den kan moderniseres'])[0].lower()}. "
+        f"Jeg har laget et forslag til en ny versjon – kan jeg sende deg lenken på SMS eller e-post?»\n\n"
+        f"Svakheter du kan nevne:\n{punkter}\n\n"
+        f"Hvis ja: be om samtykke og send {k.get('demo_url', '')}\n"
+        f"Pris: {p['oppstart']} kr oppstart + {p['per_mnd']} kr/mnd, ingen binding. De beholder domenet."
+    )
+    lenke = "tel:+47" + k["telefon"].replace(" ", "") if k.get("telefon") else ""
+    return {"type": "ring", "emne": "Ringemanus", "tekst": tekst, "lenke": lenke,
+            "oppf_tekst": "Ring igjen om noen dager hvis du ikke fikk svar.", "oppf_lenke": lenke}
+
+
 def utkast(k, cfg):
+    if k.get("type") == "oppgradering":
+        return _oppgradering_utkast(k, cfg)
     s, p = cfg["selger"], cfg["pris"]
     salong_ = k["mal"] in salong.INNHOLD
     bilde_linje = ("Bildene på siden er eksempelbilder – sier dere ja, bytter jeg dem ut med bilder fra "
@@ -324,11 +363,19 @@ def morgenrapport(leads, utelat, logg, cfg, dato):
         flagg = "".join(f'<li>{E(f)}</li>' for f in k["flagg"])
         grunner = "".join(f'<span class="chip">{E(g)}</span>' for g in k["grunner"])
         statusknapper = "".join(f'<button type="button" data-s="{s}">{E(t)}</button>' for s, t in STATUSER)
-        kort.append(f"""<article class="lead" data-orgnr="{E(k['orgnr'])}" data-type="{u['type']}">
+        oppg = k.get("type") == "oppgradering"
+        oppg_html = ""
+        if oppg:
+            svak = "".join(f"<li>{E(x)}</li>" for x in k.get("problemer") or [])
+            oppg_html = (f'<div class="oppg">Dagens side: <a href="https://{E(k.get("nettside", ""))}" target="_blank" '
+                         f'rel="noopener">{E(k.get("nettside", ""))}</a><ul>{svak}</ul></div>')
+        kort.append(f"""<article class="lead" data-orgnr="{E(k['orgnr'])}" data-type="{u['type']}" data-art="{'oppg' if oppg else 'ny'}">
 <div class="topp"><div><h3>{E(k['navn'])} <small>{E(k['form'])}</small></h3>
 <p class="meta">{E(k['bransje_navn'])} · {E(k['poststed'])} · poeng {k['poeng']}</p></div>
-<span class="kanal {u['type']}">{'E-post' if u['type'] == 'epost' else 'Ring'}</span></div>
+<span><span class="art {'oppg' if oppg else ''}">{'Ny side' if not oppg else 'Oppgradering'}</span>
+<span class="kanal {u['type']}">{'E-post' if u['type'] == 'epost' else 'Ring'}</span></span></div>
 <p class="statuslinje"></p>
+{oppg_html}
 <div class="chips">{grunner}</div>
 {f'<ul class="flagg">{flagg}</ul>' if flagg else ''}
 {oppf}
@@ -356,7 +403,9 @@ def morgenrapport(leads, utelat, logg, cfg, dato):
 .lead.ferdig{{opacity:.55}}
 .topp{{display:flex;justify-content:space-between;gap:12px}}h3{{font-size:19px}}h3 small{{color:var(--dempet);font-weight:500;font-size:13px}}
 .meta{{color:var(--dempet);font-size:14px}}.kanal{{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;height:fit-content;border:1px solid var(--linje)}}
-.kanal.epost{{color:var(--aksent)}}.statuslinje{{font-size:14px;font-weight:600;color:var(--blaa);margin-top:4px}}.statuslinje:empty{{display:none}}
+.kanal.epost{{color:var(--aksent)}}.art{{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-right:6px;background:var(--bg);color:var(--dempet)}}
+.art.oppg{{background:#F3E8FF;color:#6B3FA0}}@media(prefers-color-scheme:dark){{.art.oppg{{background:#2C2140;color:#C9A8F0}}}}
+.oppg{{font-size:14px;margin:8px 0;padding:10px 12px;border-radius:8px;border:1px solid var(--linje)}}.oppg ul{{margin:6px 0 0;padding-left:18px;color:var(--dempet)}}.statuslinje{{font-size:14px;font-weight:600;color:var(--blaa);margin-top:4px}}.statuslinje:empty{{display:none}}
 .chips{{margin:10px 0 4px}}.chip{{display:inline-block;font-size:12px;color:var(--dempet);border:1px solid var(--linje);border-radius:999px;padding:2px 9px;margin:0 6px 6px 0}}
 .flagg{{background:var(--varselbg);color:var(--varsel);border-radius:8px;padding:8px 12px 8px 28px;font-size:14px;margin:6px 0}}
 .oppf{{display:none;background:var(--blaabg);color:var(--blaa);border-radius:8px;padding:10px 12px;font-size:14px;margin:8px 0}}
@@ -375,7 +424,7 @@ textarea{{width:100%;margin-top:8px;font-size:14px;font-family:inherit;line-heig
 <div class="sum"><div class="tall"><b id="n-alle">{len(leads)}</b><span>demoer</span></div><div class="tall"><b id="n-ny">–</b><span>ikke kontaktet</span></div>
 <div class="tall"><b id="n-oppf">–</b><span>følg opp</span></div><div class="tall"><b id="n-int">–</b><span>interessert</span></div><div class="tall"><b id="n-kunde">–</b><span>kunder</span></div></div>
 <div class="filter"><button data-f="alle" class="på">Alle</button><button data-f="ny">Ikke kontaktet</button><button data-f="oppf">Følg opp</button>
-<button data-f="aktiv">Sendt/ringt</button><button data-f="int">Interessert</button><button data-f="ferdig">Kunde/nei</button></div>
+<button data-f="oppgradering">Oppgradering</button><button data-f="aktiv">Sendt/ringt</button><button data-f="int">Interessert</button><button data-f="ferdig">Kunde/nei</button></div>
 <p class="info">Status lagres i nettleseren på denne enheten. «Send e-post» og «Ring» merker automatisk. E-post uten svar etter 4 dager havner under «Følg opp».
 E-post går bare til AS og andre selskaper – enkeltpersonforetak ringer du (markedsføringsloven § 15).</p>
 {tom}{''.join(kort)}
@@ -408,7 +457,8 @@ function tegn(){{
 }}
 let filter="alle";
 function filtrer(){{document.querySelectorAll(".lead").forEach(el=>{{
-  const g=el.dataset.gruppe;el.style.display=(filter==="alle"||g===filter||(filter==="aktiv"&&g==="oppf"))?"":"none"}})}}
+  const g=el.dataset.gruppe;el.style.display=(filter==="alle"||g===filter||(filter==="aktiv"&&g==="oppf")||
+    (filter==="oppgradering"&&el.dataset.art==="oppg"))?"":"none"}})}}
 function sett(orgnr,s){{const r=db[orgnr]||{{}};
   if(s==="fulgtopp"){{r.oppf=Date.now();r.s="fulgtopp";}}
   else if(r.s===s){{delete r.s;delete r.t;}} else {{r.s=s;r.t=Date.now();}}

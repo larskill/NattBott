@@ -19,6 +19,7 @@ import ssl
 import sys
 import time
 import unicodedata
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -172,7 +173,7 @@ def aktiv(e):
 
 def vurder(e, b, idag):
     """Returnerer (poeng, grunner, flagg) eller None hvis uaktuell."""
-    if not aktiv(e) or (e.get("hjemmeside") or "").strip():
+    if not aktiv(e):
         return None
     form = org_form(e)
     grunner, flagg, poeng = [], [], 0
@@ -236,8 +237,23 @@ def til_kandidat(e, b, poeng, grunner, flagg):
         "ansatte": e.get("antallAnsatte") or 0,
         "poeng": poeng,
         "grunner": grunner,
-        "flagg": flagg,
+        "flagg": flagg + (["Har bare Facebook/Instagram-side"] if sosial_side(e.get("hjemmeside")) else []),
+        "nettside": egen_nettside(e.get("hjemmeside")),
+        "type": "oppgradering" if egen_nettside(e.get("hjemmeside")) else "ny",
     }
+
+
+def sosial_side(url):
+    return bool(url and re.search(r"facebook|instagram|fb\.com|tiktok|linkedin", url, re.I))
+
+
+def egen_nettside(url):
+    """Domenet til bedriftens egen nettside fra registeret (ikke Facebook o.l.), ellers ''."""
+    url = (url or "").strip()
+    if not url or sosial_side(url):
+        return ""
+    dom = urllib.parse.urlparse(url if "://" in url else "http://" + url).netloc.lower()
+    return dom.removeprefix("www.")
 
 
 # ---------- bilder fra Unsplash (eller Pexels) – gratis lisens ----------
@@ -367,7 +383,10 @@ def kmd_hent(args, cfg):
                 funnet += 1
         if funnet == 0 and fixture is None:
             logg.append(f"ADVARSEL: 0 nye kandidater for {b['id']} – sjekk næringskode/søk i config.json")
-    liste = sorted(kandidater.values(), key=lambda k: -k["poeng"])[: cfg["maks_kandidater_per_natt"]]
+    alle = sorted(kandidater.values(), key=lambda k: -k["poeng"])
+    nye = [k for k in alle if k["type"] == "ny"][: cfg["maks_kandidater_per_natt"]]
+    oppg = [k for k in alle if k["type"] == "oppgradering"][: cfg.get("maks_oppgradering_kandidater", 25)]
+    liste = nye + oppg
     skriv_json(os.path.join(DATA, "kandidater.json"), {"dato": idag.isoformat(), "logg": logg, "kandidater": liste})
     print("\n".join(logg))
     print(f"{len(liste)} kandidater skrevet til data/kandidater.json (av {len(kandidater)} mulige)")
@@ -388,11 +407,15 @@ def kmd_bygg(args, cfg):
 
     brukte = set(os.listdir(DEMO_DIR)) if os.path.isdir(DEMO_DIR) else set()
     laget = []
+    tak = {"ny": cfg["maks_demoer_per_natt"], "oppgradering": cfg.get("maks_oppgradering_per_natt", 8)}
     for kand in k["kandidater"]:
+        typ = kand.get("type", "ny")
         if kand["orgnr"] in utelat or kand["orgnr"] in sett:
             continue
-        if len(laget) >= cfg["maks_demoer_per_natt"]:
-            break
+        if typ == "oppgradering" and not kand.get("problemer"):
+            continue  # ikke revidert (nettsjekken har ikke kjørt)
+        if sum(1 for x in laget if x.get("type", "ny") == typ) >= tak[typ]:
+            continue
         slug = slugify(kand["navn"])
         if slug in brukte:
             slug = f"{slug}-{kand['orgnr'][-4:]}"
@@ -406,6 +429,8 @@ def kmd_bygg(args, cfg):
             f.write(maler.demo_side(kand, cfg))
         kand["utkast"] = maler.utkast(kand, cfg)
         sett[kand["orgnr"]] = {"dato": idag, "status": "demo", "slug": slug}
+        if typ == "oppgradering":
+            sett[kand["orgnr"]].update(type="oppgradering", nettside=kand["nettside"], problemer=kand["problemer"])
         laget.append(kand)
 
     os.makedirs(RAPPORT_DIR, exist_ok=True)
@@ -415,6 +440,8 @@ def kmd_bygg(args, cfg):
             f.write(html)
     skriv_json(os.path.join(DATA, "sett.json"), sett)
     skriv_json(os.path.join(DATA, f"leads-{idag}.json"), laget)
+    with open(os.path.join(DATA, "sist_natt.txt"), "w") as f:
+        f.write(idag)
     registrer_unsplash_bruk()
     # robots + indeks som ikke lister kundene offentlig
     os.makedirs(DEMO_DIR, exist_ok=True)
@@ -561,25 +588,101 @@ def finn_nettside(kand):
     return None
 
 
+# ---------- revisjon av eksisterende nettside ----------
+
+GAMMEL_TEKNOLOGI = [
+    (re.compile(r"\.swf\b|shockwave-flash", re.I), "Flash"),
+    (re.compile(r"microsoft frontpage", re.I), "FrontPage"),
+    (re.compile(r"adobe muse", re.I), "Adobe Muse"),
+    (re.compile(r"iweb", re.I), "iWeb"),
+    (re.compile(r'name="generator"[^>]*content="joomla!? ?[1-3]\b', re.I), "gammel Joomla"),
+    (re.compile(r'name="generator"[^>]*content="wordpress [1-4]\.', re.I), "gammel WordPress"),
+]
+
+
+def hent_side_info(url, timeout=10):
+    """(html, sekunder, endelig_url, feil). feil: None, 'http' (svarer, men avviser oss) eller 'nett' (svarer ikke)."""
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                                                             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"})
+    start = time.time()
+    try:
+        with urllib.request.urlopen(req, timeout=timeout, context=ssl_kontekst()) as r:
+            html_ = r.read(1_500_000).decode("utf-8", "ignore")
+            return html_, time.time() - start, r.geturl(), None
+    except urllib.error.HTTPError:
+        return None, None, None, "http"
+    except Exception:  # noqa: BLE001
+        return None, None, None, "nett"
+
+
+def revider_nettside(dom, idag=None):
+    """Finner konkrete svakheter. Returnerer (poeng, svakheter). Sterke svakheter = 2 poeng, svake = 1.
+    Siden må kunne leses for å bli vurdert – avviser den oss (f.eks. 403), lar vi den være."""
+    idag = idag or dt.date.today()
+    feil = []
+    html_ = sek = endelig = None
+    for url in (f"https://{dom}", f"https://www.{dom}", f"http://{dom}", f"http://www.{dom}"):
+        html_, sek, endelig, f = hent_side_info(url)
+        if html_:
+            break
+        feil.append(f)
+    if not html_:
+        if feil and all(f == "nett" for f in feil):
+            return 3, ["Nettsiden svarte ikke da jeg prøvde å åpne den"]
+        return 0, []
+    https_ok = (endelig or "").startswith("https")
+    sterke, svake = [], []
+    if PARKERING.search(html_) and len(html_) < 20000:
+        return 3, ["Domenet viser bare en parkeringsside"]
+    if re.search(r"facebook\.com", endelig or "", re.I):
+        return 3, ["Domenet sender bare videre til Facebook"]
+    if not https_ok:
+        sterke.append("Mangler sikker tilkobling (nettlesere viser «Ikke sikker»)")
+    if not re.search(r'<meta[^>]+name=["\']?viewport', html_, re.I):
+        sterke.append("Ikke tilpasset mobil")
+    aar = [int(x) for x in re.findall(r"(?:©|&copy;|copyright)\D{0,40}?((?:19|20)\d\d)(?!\d)", html_, re.I)]
+    if aar and max(aar) <= idag.year - 3:
+        sterke.append(f"Ser ikke ut til å ha vært oppdatert siden {max(aar)}")
+    for mønster, navn in GAMMEL_TEKNOLOGI:
+        if mønster.search(html_):
+            sterke.append(f"Bygget med utdatert teknologi ({navn})")
+            break
+    if not re.search(r'<meta[^>]+name=["\']?description', html_, re.I):
+        svake.append("Mangler beskrivelse for Google-søk")
+    if sek and sek > 3.5:
+        svake.append(f"Treg å laste ({sek:.0f} sekunder)")
+    return 2 * len(sterke) + len(svake), sterke + svake
+
+
 def kmd_nettsjekk(args, cfg):
+    """Nye kandidater: finnes det likevel en nettside? Da blir de oppgraderings-kandidater.
+    Oppgraderings-kandidater: revider siden – bare de med tydelige svakheter går videre."""
     sti = os.path.join(DATA, "kandidater.json")
     k = les_json(sti, {"kandidater": []})
     utelat = les_json(os.path.join(DATA, "utelat.json"), {})
     for kand in k["kandidater"]:
-        dom = finn_nettside(kand)
-        if dom:
-            utelat[kand["orgnr"]] = f"har trolig nettside: {dom}"
+        if kand.get("type", "ny") == "ny":
+            dom = finn_nettside(kand)
+            if dom:
+                kand["type"], kand["nettside"] = "oppgradering", dom
+        if kand.get("type") == "oppgradering":
+            poeng, svakheter = revider_nettside(kand["nettside"])
+            kand["problemer"] = svakheter
+            if poeng < 2:
+                utelat[kand["orgnr"]] = f"nettsiden {kand['nettside']} ser oppdatert ut"
     skriv_json(sti, k)
     skriv_json(os.path.join(DATA, "utelat.json"), utelat)
-    print(f"Nettsjekk: {len(utelat)} utelatt")
+    n_opp = sum(1 for x in k["kandidater"] if x.get("type") == "oppgradering" and x["orgnr"] not in utelat)
+    print(f"Nettsjekk: {len(utelat)} utelatt, {n_opp} oppgraderings-kandidater med svakheter")
 
 
 def kmd_sjekk_igjen(args, cfg):
-    """Sjekker dagens demoer på nytt: fjerner dem som har nettside, og gjenoppretter feilaktig fjernede."""
+    """Sjekker en dags demoer på nytt. Har bedriften nettside: revider den – svak side = oppgraderings-lead,
+    god side = demoen fjernes. Bedrifter som tidligere ble fjernet pga. nettside vurderes også på nytt."""
     import shutil
     sett = les_json(os.path.join(DATA, "sett.json"), {})
     dato = args.dato or dt.date.today().isoformat()
-    fjernet, gjenopprettet = [], []
+    logg = []
     for onr, info in list(sett.items()):
         if info.get("dato") != dato or info.get("status") not in ("demo", "har_nettside"):
             continue
@@ -590,22 +693,28 @@ def kmd_sjekk_igjen(args, cfg):
         adr = e.get("forretningsadresse") or {}
         kand = {"navn": pent_navn(e.get("navn", "")), "epost": e.get("epostadresse") or "", "orgnr": onr,
                 "telefon": e.get("mobil") or e.get("telefon") or "", "poststed": adr.get("poststed", "")}
-        dom = finn_nettside(kand)
-        if dom and info["status"] == "demo":
-            fjernet.append((kand["navn"], dom))
-            if info.get("slug") and os.path.isdir(os.path.join(DEMO_DIR, info["slug"])):
-                shutil.rmtree(os.path.join(DEMO_DIR, info["slug"]))
-            sett[onr] = {"dato": dato, "status": "har_nettside", "grunn": dom, "slug": info.get("slug")}
-        elif not dom and info["status"] == "har_nettside":
-            slug = info.get("slug") or slugify(kand["navn"])
-            sett[onr] = {"dato": dato, "status": "demo", "slug": slug}
-            gjenopprettet.append(kand["navn"])
+        dom = info.get("nettside") or egen_nettside(e.get("hjemmeside")) or (
+            info.get("grunn") if info["status"] == "har_nettside" else None) or finn_nettside(kand)
+        if dom:
+            dom = re.sub(r"^.*?:\s*", "", dom).strip()
+        slug = info.get("slug") or slugify(kand["navn"])
+        if not dom:
+            if info["status"] == "har_nettside":
+                sett[onr] = {"dato": dato, "status": "demo", "slug": slug}
+                logg.append(f"Gjenopprettet (fant ikke sikker nettside): {kand['navn']}")
+            continue
+        poeng, svakheter = revider_nettside(dom)
+        if poeng >= 2:
+            sett[onr] = {"dato": dato, "status": "demo", "slug": slug, "type": "oppgradering",
+                         "nettside": dom, "problemer": svakheter}
+            logg.append(f"Oppgradering: {kand['navn']} ({dom}) – {'; '.join(svakheter)}")
+        else:
+            if os.path.isdir(os.path.join(DEMO_DIR, slug)):
+                shutil.rmtree(os.path.join(DEMO_DIR, slug))
+            sett[onr] = {"dato": dato, "status": "har_nettside", "grunn": dom, "slug": slug}
+            logg.append(f"God nettside – demo fjernet: {kand['navn']} ({dom})")
     skriv_json(os.path.join(DATA, "sett.json"), sett)
-    for navn, dom in fjernet:
-        print(f"Har nettside – demo fjernet: {navn} ({dom})")
-    for navn in gjenopprettet:
-        print(f"Gjenopprettet (fant ikke sikker nettside): {navn}")
-    print(f"Fjernet {len(fjernet)}, gjenopprettet {len(gjenopprettet)}")
+    print("\n".join(logg) or "Ingen endringer")
 
 
 # ---------- morgenrapport på e-post ----------
@@ -673,7 +782,10 @@ def kmd_gjenskap(args, cfg):
         kand = til_kandidat(e, b, *v)
         kand["slug"] = info["slug"]
         kand["demo_url"] = f"{cfg['demo_base_url'].rstrip('/')}/{info['slug']}/"
-        if args.bygg_demoer:
+        kand["type"] = info.get("type", "ny")
+        kand["nettside"] = info.get("nettside", "")
+        kand["problemer"] = info.get("problemer", [])
+        if args.bygg_demoer or not os.path.exists(os.path.join(DEMO_DIR, info["slug"], "index.html")):
             kand["bilder"] = velg_bilder(kand)
             mappe = os.path.join(DEMO_DIR, info["slug"])
             os.makedirs(mappe, exist_ok=True)
